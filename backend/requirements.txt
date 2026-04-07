@@ -1,0 +1,8 @@
+Django>=5.0
+djangorestframework
+django-filter
+python-dotenv
+psycopg2-binary
+django-cors-headers
+Pillow==11.1.0
+gunicorn==23.0.0

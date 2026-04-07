@@ -1,0 +1,1042 @@
+<!doctype html>
+<html lang="ko" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+* { font-family: 'Noto Sans KR', sans-serif; }
+html, body { height: 100%; margin: 0; }
+.tab-active { color: var(--accent); }
+.tab-inactive { color: #b0b0b0; }
+.card-shadow { box-shadow: 0 1px 8px rgba(0,0,0,0.04); }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge-green { background: #e8faf0; color: #2ba862; }
+.badge-yellow { background: #fff8e1; color: #c49000; }
+.badge-red { background: #ffeaea; color: #d94a4a; }
+.badge-blue { background: #e8f4fd; color: #3a8fd4; }
+.badge-gray { background: #f0f0f0; color: #888; }
+.fade-in { animation: fadeIn .3s ease; }
+@keyframes fadeIn { from { opacity:0; transform:translateY(8px); } to { opacity:1; transform:translateY(0); } }
+input, select, textarea { outline: none; }
+input:focus, select:focus, textarea:focus { border-color: var(--accent) !important; }
+.overlay { position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.25); z-index: 90; }
+.modal { position: fixed; bottom:0; left:0; width:100%; background: #fff; border-radius: 20px 20px 0 0; z-index: 100; max-height: 88%; overflow-y: auto; padding: 24px 20px 32px; }
+:root {
+  --accent: #5cc6ba;
+  --accent-light: #e8faf5;
+  --bg: #ffffff;
+  --surface: #f7f8fa;
+  --text: #222222;
+  --text-sub: #888888;
+  --coral: #f0907e;
+  --yellow: #f5c842;
+  --sky: #7ec8e3;
+}
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+</style>
+  <script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        accent: 'var(--accent)',
+        'accent-light': 'var(--accent-light)',
+        surface: 'var(--surface)',
+        txt: 'var(--text)',
+        sub: 'var(--text-sub)',
+      }
+    }
+  }
+}
+</script>
+  <style>body { box-sizing: border-box; }</style>
+ </head>
+ <body class="h-full bg-white text-txt">
+  <div id="app" class="h-full w-full flex flex-col overflow-hidden" style="max-width:480px;margin:0 auto;background:var(--bg);">
+   <!-- Splash -->
+   <div id="splash-screen" class="h-full w-full flex flex-col items-center justify-center" style="background:var(--bg);">
+    <div style="width:72px;height:72px;border-radius:18px;background:var(--accent);display:flex;align-items:center;justify-content:center;margin-bottom:16px;">
+     <svg width="36" height="36" viewbox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z" /><path d="M2 17l10 5 10-5" /><path d="M2 12l10 5 10-5" />
+     </svg>
+    </div>
+    <div style="font-size:26px;font-weight:700;color:var(--text);letter-spacing:-0.5px;" id="splash-title">
+     TeachBee
+    </div>
+    <div style="font-size:13px;color:var(--text-sub);margin-top:6px;">
+     과외쌤 전용 개인 비서
+    </div>
+   </div><!-- Main App -->
+   <div id="main-app" class="h-full flex flex-col" style="display:none;">
+    <!-- Header -->
+    <div id="app-header" class="px-5 pt-5 pb-2 flex items-center justify-between flex-shrink-0">
+     <div>
+      <div id="header-title" style="font-size:20px;font-weight:700;color:var(--text);">
+       TeachBee
+      </div>
+      <div id="header-greeting" style="font-size:12px;color:var(--text-sub);margin-top:1px;">
+       오늘도 좋은 수업 되세요 ☀️
+      </div>
+     </div>
+     <div class="flex gap-2">
+      <button onclick="showNotifications()" class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface);"><i data-lucide="bell" style="width:18px;height:18px;color:var(--text-sub);"></i></button> <button onclick="showSettings()" class="w-9 h-9 rounded-full flex items-center justify-center" style="background:var(--surface);"><i data-lucide="settings" style="width:18px;height:18px;color:var(--text-sub);"></i></button>
+     </div>
+    </div><!-- Content Area -->
+    <div id="content-area" class="flex-1 overflow-y-auto scrollbar-hide px-5 pb-4">
+     <!-- Filled by JS -->
+    </div><!-- FAB --> <button id="fab-btn" onclick="openAddModal()" class="fixed flex items-center justify-center" style="width:52px;height:52px;border-radius:50%;background:var(--accent);color:#fff;bottom:80px;right:calc(50% - 210px);box-shadow:0 4px 16px rgba(92,198,186,0.35);z-index:50;border:none;"> <i data-lucide="plus" style="width:24px;height:24px;"></i> </button> <!-- Tab Bar -->
+    <div class="flex-shrink-0 flex items-center justify-around py-2 border-t" style="border-color:#f0f0f0;background:#fff;">
+     <button onclick="switchTab('home')" class="flex flex-col items-center gap-0.5 py-1 tab-btn" data-tab="home"> <i data-lucide="home" style="width:20px;height:20px;"></i> <span style="font-size:10px;font-weight:500;">홈</span> </button> <button onclick="switchTab('calendar')" class="flex flex-col items-center gap-0.5 py-1 tab-btn" data-tab="calendar"> <i data-lucide="calendar" style="width:20px;height:20px;"></i> <span style="font-size:10px;font-weight:500;">달력</span> </button> <button onclick="switchTab('students')" class="flex flex-col items-center gap-0.5 py-1 tab-btn" data-tab="students"> <i data-lucide="users" style="width:20px;height:20px;"></i> <span style="font-size:10px;font-weight:500;">학생</span> </button> <button onclick="switchTab('billing')" class="flex flex-col items-center gap-0.5 py-1 tab-btn" data-tab="billing"> <i data-lucide="wallet" style="width:20px;height:20px;"></i> <span style="font-size:10px;font-weight:500;">정산</span> </button> <button onclick="switchTab('todo')" class="flex flex-col items-center gap-0.5 py-1 tab-btn" data-tab="todo"> <i data-lucide="check-circle" style="width:20px;height:20px;"></i> <span style="font-size:10px;font-weight:500;">할 일</span> </button>
+    </div>
+   </div><!-- Modal Container -->
+   <div id="modal-overlay" class="overlay" style="display:none;" onclick="closeModal()"></div>
+   <div id="modal-container" class="modal" style="display:none;"></div>
+  </div>
+  <script>
+// ===== State =====
+let allData = [];
+let currentTab = 'home';
+let selectedDate = new Date();
+let calendarMonth = new Date();
+
+const defaultConfig = {
+  app_title: 'TeachBee',
+  home_greeting: '오늘도 좋은 수업 되세요 ☀️',
+  background_color: '#ffffff',
+  surface_color: '#f7f8fa',
+  text_color: '#222222',
+  accent_color: '#5cc6ba',
+  sub_text_color: '#888888'
+};
+
+// ===== Element SDK =====
+window.elementSdk.init({
+  defaultConfig,
+  onConfigChange: async (config) => {
+    const bg = config.background_color || defaultConfig.background_color;
+    const surface = config.surface_color || defaultConfig.surface_color;
+    const txt = config.text_color || defaultConfig.text_color;
+    const accent = config.accent_color || defaultConfig.accent_color;
+    const sub = config.sub_text_color || defaultConfig.sub_text_color;
+    document.documentElement.style.setProperty('--bg', bg);
+    document.documentElement.style.setProperty('--surface', surface);
+    document.documentElement.style.setProperty('--text', txt);
+    document.documentElement.style.setProperty('--accent', accent);
+    document.documentElement.style.setProperty('--accent-light', accent + '18');
+    document.documentElement.style.setProperty('--text-sub', sub);
+    document.body.style.background = bg;
+
+    const title = config.app_title || defaultConfig.app_title;
+    const greeting = config.home_greeting || defaultConfig.home_greeting;
+    const ht = document.getElementById('header-title');
+    if (ht) ht.textContent = title;
+    const hg = document.getElementById('header-greeting');
+    if (hg) hg.textContent = greeting;
+    const st = document.getElementById('splash-title');
+    if (st) st.textContent = title;
+  },
+  mapToCapabilities: (config) => ({
+    recolorables: [
+      { get: () => config.background_color || defaultConfig.background_color, set: v => { config.background_color = v; window.elementSdk.setConfig({ background_color: v }); } },
+      { get: () => config.surface_color || defaultConfig.surface_color, set: v => { config.surface_color = v; window.elementSdk.setConfig({ surface_color: v }); } },
+      { get: () => config.text_color || defaultConfig.text_color, set: v => { config.text_color = v; window.elementSdk.setConfig({ text_color: v }); } },
+      { get: () => config.accent_color || defaultConfig.accent_color, set: v => { config.accent_color = v; window.elementSdk.setConfig({ accent_color: v }); } },
+      { get: () => config.sub_text_color || defaultConfig.sub_text_color, set: v => { config.sub_text_color = v; window.elementSdk.setConfig({ sub_text_color: v }); } },
+    ],
+    borderables: [],
+    fontEditable: undefined,
+    fontSizeable: undefined
+  }),
+  mapToEditPanelValues: (config) => new Map([
+    ['app_title', config.app_title || defaultConfig.app_title],
+    ['home_greeting', config.home_greeting || defaultConfig.home_greeting],
+  ])
+});
+
+// ===== Data SDK =====
+const dataHandler = {
+  onDataChanged(data) {
+    allData = data;
+    renderCurrentTab();
+  }
+};
+(async () => {
+  const r = await window.dataSdk.init(dataHandler);
+  if (!r.isOk) console.error('Data SDK init failed');
+  
+  // Add sample data if database is empty
+  if (allData.length === 0) {
+    const today = new Date().toISOString().slice(0,10);
+    const tomorrow = new Date(Date.now() + 86400000).toISOString().slice(0,10);
+    
+    // Sample students
+    await window.dataSdk.create({
+      type: 'student',
+      student_name: '김준호',
+      phone: '010-1234-5678',
+      subject: '영어',
+      day: '월, 수, 금',
+      time: '15:00',
+      location: '강남 카페',
+      method: '대면',
+      fee: 50000,
+      payment_status: '입금완료',
+      memo: '발음 교정 중심',
+      created_at: new Date().toISOString()
+    });
+    
+    const s2 = await window.dataSdk.create({
+      type: 'student',
+      student_name: '이수지',
+      phone: '010-9876-5432',
+      subject: '수학',
+      day: '화, 목',
+      time: '16:00',
+      location: '온라인',
+      method: '온라인',
+      fee: 45000,
+      payment_status: '미납',
+      memo: '고등수학 기본 복습',
+      created_at: new Date().toISOString()
+    });
+    
+    const s3 = await window.dataSdk.create({
+      type: 'student',
+      student_name: '박민준',
+      phone: '010-5555-6666',
+      subject: '과학',
+      day: '월, 금',
+      time: '17:00',
+      location: '자택',
+      method: '대면',
+      fee: 55000,
+      payment_status: '입금완료',
+      memo: '',
+      created_at: new Date().toISOString()
+    });
+    
+    // Sample lessons for today
+    const lessonData = [
+      { date: today, time: '15:00', subject: '영어 발음', location: '강남 카페' },
+      { date: today, time: '16:00', subject: '수학 문제풀이', location: '온라인' }
+    ];
+    
+    for (let i = 0; i < 3; i++) {
+      const lesson = lessonData[i] || { date: today, time: '18:00', subject: 'Test', location: 'Test' };
+      await window.dataSdk.create({
+        type: 'lesson',
+        lesson_student_id: [allData.find(d=>d.student_name==='김준호')?.__backendId, allData.find(d=>d.student_name==='이수지')?.__backendId, allData.find(d=>d.student_name==='박민준')?.__backendId][i],
+        lesson_date: lesson.date,
+        time: lesson.time,
+        subject: lesson.subject,
+        location: lesson.location,
+        method: i === 1 ? '온라인' : '대면',
+        homework: i === 0 ? 'p.45-50 문제 풀기' : '',
+        homework_checked: false,
+        prep_done: false,
+        status: '예정',
+        memo: '',
+        created_at: new Date().toISOString()
+      });
+    }
+    
+    // Sample todos
+    await window.dataSdk.create({
+      type: 'todo',
+      todo_text: '수지 학생 입금 확인 메시지 보내기',
+      todo_date: today,
+      todo_done: false,
+      created_at: new Date().toISOString()
+    });
+    
+    await window.dataSdk.create({
+      type: 'todo',
+      todo_text: '어제 숙제 채점하기',
+      todo_date: today,
+      todo_done: false,
+      created_at: new Date().toISOString()
+    });
+  }
+  
+  switchTab('home');
+})();
+
+// ===== Helpers =====
+function getStudents() { return allData.filter(d => d.type === 'student'); }
+function getLessons() { return allData.filter(d => d.type === 'lesson'); }
+function getCancels() { return allData.filter(d => d.type === 'cancel'); }
+function getTodos() { return allData.filter(d => d.type === 'todo'); }
+
+function fmt(date) {
+  const d = new Date(date);
+  return `${d.getMonth()+1}/${d.getDate()}`;
+}
+function fmtFull(date) {
+  const d = new Date(date);
+  const days = ['일','월','화','수','목','금','토'];
+  return `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')} (${days[d.getDay()]})`;
+}
+function todayStr() { return new Date().toISOString().slice(0,10); }
+function getStudentName(id) {
+  const s = allData.find(d => d.__backendId === id);
+  return s ? s.student_name : '미지정';
+}
+function payBadge(status) {
+  if (status === '입금완료') return '<span class="badge badge-green">입금완료</span>';
+  if (status === '미납') return '<span class="badge badge-red">미납</span>';
+  if (status === '부분입금') return '<span class="badge badge-yellow">부분입금</span>';
+  return '<span class="badge badge-gray">대기</span>';
+}
+function statusBadge(status) {
+  if (status === '완료') return '<span class="badge badge-green">완료</span>';
+  if (status === '결강') return '<span class="badge badge-red">결강</span>';
+  if (status === '보강') return '<span class="badge badge-blue">보강</span>';
+  return '<span class="badge badge-gray">예정</span>';
+}
+
+// Init icons
+setTimeout(()=>{
+  document.getElementById('splash-screen').style.display = 'none';
+  document.getElementById('main-app').style.display = 'flex';
+  lucide.createIcons();
+}, 1800);
+
+// ===== Tabs =====
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tab-btn').forEach(b => {
+    const isActive = b.dataset.tab === tab;
+    b.className = `flex flex-col items-center gap-0.5 py-1 tab-btn ${isActive ? 'tab-active' : 'tab-inactive'}`;
+  });
+  document.getElementById('app-header').style.display = (tab === 'calendar') ? 'flex' : 'none';
+  renderCurrentTab();
+}
+
+function renderCurrentTab() {
+  const area = document.getElementById('content-area');
+  if (currentTab === 'home') renderHome(area);
+  else if (currentTab === 'calendar') renderCalendar(area);
+  else if (currentTab === 'students') renderStudents(area);
+  else if (currentTab === 'billing') renderBilling(area);
+  else if (currentTab === 'todo') renderTodoTab(area);
+  lucide.createIcons();
+}
+
+// ===== HOME =====
+function renderHome(el) {
+  const today = new Date();
+  const todayStr_val = todayStr();
+  const todayLessons = getLessons().filter(l => l.lesson_date === todayStr_val).sort((a,b) => (a.time||'').localeCompare(b.time||''));
+  const unpaid = getStudents().filter(s => s.payment_status === '미납');
+  const makeup = getCancels().filter(c => !c.makeup_done);
+  const todos = getTodos().filter(t => !t.todo_done && t.todo_date === todayStr_val);
+
+  el.innerHTML = `<div class="fade-in">
+    <!-- Compact header banner -->
+    <div class="rounded-2xl p-4 mb-6 card-shadow" style="background:linear-gradient(135deg, #f9fafb 0%, #f3f4f6 100%);border:1px solid #e5e7eb;">
+      <div style="font-size:12px;color:var(--text-sub);margin-bottom:2px;">오늘</div>
+      <div style="font-size:18px;font-weight:700;color:var(--text);">${today.toLocaleDateString('ko-KR', {month:'short', day:'numeric', weekday:'long'})}</div>
+    </div>
+
+    <!-- KPI Stats Cards - Clean Design -->
+    <div class="grid grid-cols-4 gap-2.5 mb-6">
+      <div class="rounded-xl p-3 text-center card-shadow" style="background:#fff;border:1px solid #f0f0f0;">
+        <div style="font-size:20px;font-weight:700;color:var(--accent);margin-bottom:2px;">${todayLessons.length}</div>
+        <div style="font-size:10px;color:var(--text-sub);font-weight:500;">수업</div>
+      </div>
+      <div class="rounded-xl p-3 text-center card-shadow" style="background:#fff;border:1px solid #f0f0f0;">
+        <div style="font-size:20px;font-weight:700;color:#f0907e;margin-bottom:2px;">${unpaid.length}</div>
+        <div style="font-size:10px;color:var(--text-sub);font-weight:500;">미납</div>
+      </div>
+      <div class="rounded-xl p-3 text-center card-shadow" style="background:#fff;border:1px solid #f0f0f0;">
+        <div style="font-size:20px;font-weight:700;color:#7ec8e3;margin-bottom:2px;">${makeup.length}</div>
+        <div style="font-size:10px;color:var(--text-sub);font-weight:500;">보강</div>
+      </div>
+      <div class="rounded-xl p-3 text-center card-shadow" style="background:#fff;border:1px solid #f0f0f0;">
+        <div style="font-size:20px;font-weight:700;color:#f5c842;margin-bottom:2px;">${todos.length}</div>
+        <div style="font-size:10px;color:var(--text-sub);font-weight:500;">할 일</div>
+      </div>
+    </div>
+
+    <!-- Today's Schedule Section -->
+    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">📅 오늘 수업</div>
+    ${todayLessons.length === 0 ? 
+      `<div class="rounded-2xl p-6 text-center card-shadow mb-6" style="background:#fafbfc;border:1px solid #f0f0f0;">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--accent-light);margin:0 auto 10px;display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="calendar" style="width:24px;height:24px;color:var(--accent);"></i>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">오늘 수업이 없네요</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:12px;">다른 할 일을 체크하거나 수업을 추가해보세요</div>
+        <div class="flex gap-2 justify-center">
+          <button onclick="switchTab('todo')" class="px-4 py-2 rounded-lg" style="background:var(--accent);color:#fff;font-size:12px;font-weight:500;">할 일 보기</button>
+          <button onclick="openLessonForm()" class="px-4 py-2 rounded-lg" style="background:var(--surface);color:var(--text);font-size:12px;font-weight:500;">수업 추가</button>
+        </div>
+      </div>` :
+      `<div class="mb-6">${todayLessons.map(l => `
+        <div class="rounded-xl p-3.5 mb-2.5 card-shadow" style="background:#fff;border:1px solid #f0f0f0;cursor:pointer;" onclick="openLessonDetail('${l.__backendId}')">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3" style="flex:1;">
+              <div style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:6px 10px;border-radius:6px;min-width:50px;text-align:center;">${l.time||'-'}</div>
+              <div>
+                <div style="font-size:13px;font-weight:600;color:var(--text);">${getStudentName(l.lesson_student_id)}</div>
+                <div style="font-size:11px;color:var(--text-sub);">${l.subject||''} ${l.location ? '·' + l.location : ''}</div>
+              </div>
+            </div>
+            <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--text-sub);"></i>
+          </div>
+        </div>
+      `).join('')}</div>`}
+
+    <!-- Today's Todos -->
+    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;">✅ 오늘 할 일</div>
+    ${todos.length === 0 ?
+      `<div class="rounded-2xl p-6 text-center card-shadow mb-6" style="background:#fafbfc;border:1px solid #f0f0f0;">
+        <div style="width:48px;height:48px;border-radius:50%;background:#e8faf0;margin:0 auto 10px;display:flex;align-items:center;justify-content:center;">
+          <i data-lucide="check-circle" style="width:24px;height:24px;color:var(--accent);"></i>
+        </div>
+        <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:4px;">할 일이 없어요</div>
+        <div style="font-size:12px;color:var(--text-sub);margin-bottom:12px;">할 일을 추가해서 체계적으로 관리하세요</div>
+        <button onclick="openTodoForm()" class="w-full py-2 rounded-lg" style="background:var(--accent);color:#fff;font-size:12px;font-weight:500;">할 일 추가</button>
+      </div>` :
+      `<div class="mb-6">${todos.map(t=>`
+        <div class="flex items-center gap-3 rounded-xl p-3.5 mb-2.5 card-shadow" style="background:#fff;border:1px solid #f0f0f0;">
+          <button onclick="event.stopPropagation();toggleTodo('${t.__backendId}',true)" style="width:20px;height:20px;border-radius:50%;border:2px solid var(--accent);background:transparent;flex-shrink:0;cursor:pointer;"></button>
+          <span style="font-size:13px;color:var(--text);flex:1;">${t.todo_text}</span>
+          <i data-lucide="chevron-right" style="width:16px;height:16px;color:var(--text-sub);"></i>
+        </div>
+      `).join('')}</div>`}
+
+    <!-- Critical Items Footer -->
+    ${(unpaid.length > 0 || makeup.length > 0) ? `
+    <div style="font-size:13px;font-weight:600;color:var(--text);margin-bottom:10px;margin-top:16px;">⚠️ 처리 필요</div>
+    <div>
+      ${unpaid.slice(0,2).map(s=>`
+        <div class="rounded-xl p-3.5 mb-2.5 card-shadow" style="background:#fff5f5;border:1px solid #ffebeb;cursor:pointer;" onclick="switchTab('billing')">
+          <div class="flex items-center justify-between">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#d94a4a;">${s.student_name}</div>
+              <div style="font-size:11px;color:#d94a4a;opacity:0.7;">${(s.fee||0).toLocaleString()}원 미납</div>
+            </div>
+            <i data-lucide="chevron-right" style="width:16px;height:16px;color:#d94a4a;"></i>
+          </div>
+        </div>
+      `).join('')}
+      ${makeup.slice(0,2).map(c=>`
+        <div class="rounded-xl p-3.5 mb-2.5 card-shadow" style="background:#f0f9ff;border:1px solid #e0f2fe;cursor:pointer;" onclick="selectedDate=new Date('${c.makeup_date||todayStr_val}');switchTab('calendar')">
+          <div class="flex items-center justify-between">
+            <div>
+              <div style="font-size:13px;font-weight:600;color:#3a8fd4;">${getStudentName(c.lesson_student_id)} 보강</div>
+              <div style="font-size:11px;color:#3a8fd4;opacity:0.7;">결강일: ${c.cancel_date}</div>
+            </div>
+            <i data-lucide="chevron-right" style="width:16px;height:16px;color:#3a8fd4;"></i>
+          </div>
+        </div>
+      `).join('')}
+    </div>` : ''}
+  </div>`;
+}
+
+// ===== CALENDAR =====
+function renderCalendar(el) {
+  const today = new Date();
+  const todayS = todayStr();
+  
+  // Generate 4 weeks starting from today
+  let weeks = [];
+  for (let w = 0; w < 4; w++) {
+    let week = [];
+    for (let d = 0; d < 7; d++) {
+      const date = new Date(today);
+      date.setDate(today.getDate() + (w * 7) + d);
+      week.push(date);
+    }
+    weeks.push(week);
+  }
+
+  let timelineHtml = '';
+  weeks.forEach((week, wIdx) => {
+    const weekStart = week[0];
+    const weekEnd = week[6];
+    timelineHtml += `<div style="margin-bottom:16px;">
+      <div style="font-size:12px;font-weight:600;color:var(--text-sub);margin-bottom:8px;">
+        ${weekStart.toLocaleDateString('ko-KR', {month:'short', day:'numeric'})} - ${weekEnd.toLocaleDateString('ko-KR', {month:'short', day:'numeric'})}
+      </div>
+      <div class="flex gap-1.5 overflow-x-auto scrollbar-hide pb-2">`;
+    
+    week.forEach(date => {
+      const ds = date.toISOString().slice(0,10);
+      const isToday = ds === todayS;
+      const dayLessons = getLessons().filter(l => l.lesson_date === ds);
+      const hasLesson = dayLessons.length > 0;
+      const days = ['일','월','화','수','목','금','토'];
+      
+      timelineHtml += `<div style="flex-shrink:0;cursor:pointer;" onclick="selectedDate=new Date('${ds}');renderCurrentTab();">
+        <div class="rounded-2xl p-3 text-center" style="width:56px;background:${isToday?'var(--accent)':'var(--surface)'};border:${hasLesson?'2px solid var(--accent)':'none'};padding-top:8px;">
+          <div style="font-size:10px;color:${isToday?'#fff':'var(--text-sub)'};font-weight:500;">${days[date.getDay()]}</div>
+          <div style="font-size:16px;font-weight:700;color:${isToday?'#fff':'var(--text)'};margin-top:2px;">${date.getDate()}</div>
+          ${hasLesson ? `<div style="font-size:10px;color:${isToday?'#fff':'var(--accent)'};margin-top:4px;font-weight:600;">${dayLessons.length}</div>` : ''}
+        </div>
+      </div>`;
+    });
+    
+    timelineHtml += '</div></div>';
+  });
+
+  const selStr = selectedDate.toISOString().slice(0,10);
+  const dayLessons = getLessons().filter(l => l.lesson_date === selStr).sort((a,b) => (a.time||'').localeCompare(b.time||''));
+
+  el.innerHTML = `<div class="fade-in">
+    <div style="font-size:14px;font-weight:700;margin-bottom:12px;">📅 4주 타임라인</div>
+    ${timelineHtml}
+
+    <div style="font-size:14px;font-weight:700;margin:20px 0 12px;">📌 ${fmtFull(selStr)}</div>
+    ${dayLessons.length === 0 ? 
+      '<div class="rounded-2xl p-4 text-center card-shadow" style="background:var(--surface);color:var(--text-sub);font-size:13px;">수업이 없어요</div>' :
+      dayLessons.map(l => `
+        <div class="rounded-2xl p-4 mb-2 card-shadow" style="background:#fff;border:1px solid #f0f0f0;cursor:pointer;" onclick="openLessonDetail('${l.__backendId}')">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-2">
+              <div style="font-size:11px;font-weight:600;color:var(--accent);background:var(--accent-light);padding:4px 8px;border-radius:6px;">${l.time||'-'}</div>
+              <div><span style="font-weight:600;">${getStudentName(l.lesson_student_id)}</span><span style="font-size:12px;color:var(--text-sub);margin-left:6px;">${l.subject||''}</span></div>
+            </div>
+            ${statusBadge(l.status)}
+          </div>
+          ${l.location ? `<div style="font-size:11px;color:var(--text-sub);margin-top:6px;">📍 ${l.location}</div>` : ''}
+        </div>
+      `).join('')}
+  </div>`;
+}
+
+// ===== STUDENTS =====
+function renderStudents(el) {
+  const students = getStudents();
+  el.innerHTML = `<div class="fade-in">
+    <div class="flex items-center justify-between py-3">
+      <div style="font-size:18px;font-weight:700;">학생 관리</div>
+      <button onclick="openStudentForm()" class="px-3 py-1.5 rounded-full" style="background:var(--accent);color:#fff;font-size:12px;font-weight:500;">+ 학생 추가</button>
+    </div>
+    <div class="relative mb-3">
+      <i data-lucide="search" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);width:16px;height:16px;color:var(--text-sub);"></i>
+      <input id="student-search" oninput="filterStudents()" placeholder="학생 검색" class="w-full rounded-xl py-2.5 pl-9 pr-3" style="background:var(--surface);border:1px solid #eee;font-size:13px;">
+    </div>
+    <div id="student-list">
+    ${students.length===0?'<div class="text-center py-10" style="color:var(--text-sub);font-size:13px;">학생을 추가해보세요</div>':
+    students.map(s=>`
+      <div class="rounded-2xl p-4 mb-2 card-shadow" style="background:#fff;border:1px solid #f0f0f0;cursor:pointer;" onclick="openStudentDetail('${s.__backendId}')" data-student-card>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div style="width:38px;height:38px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:600;color:var(--accent);">${(s.student_name||'?')[0]}</div>
+            <div>
+              <div style="font-size:14px;font-weight:600;">${s.student_name}</div>
+              <div style="font-size:11px;color:var(--text-sub);">${s.subject||''} ${s.day?'· '+s.day:''}</div>
+            </div>
+          </div>
+          ${payBadge(s.payment_status)}
+        </div>
+      </div>`).join('')}
+    </div>
+  </div>`;
+}
+
+function filterStudents() {
+  const q = document.getElementById('student-search').value.toLowerCase();
+  document.querySelectorAll('[data-student-card]').forEach(c => {
+    c.style.display = c.textContent.toLowerCase().includes(q) ? '' : 'none';
+  });
+}
+
+// ===== BILLING =====
+function renderBilling(el) {
+  const students = getStudents();
+  const total = students.reduce((s,st)=>s+(st.fee||0),0);
+  const paid = students.filter(s=>s.payment_status==='입금완료').reduce((s,st)=>s+(st.fee||0),0);
+  const unpaid = total - paid;
+
+  el.innerHTML = `<div class="fade-in">
+    <div style="font-size:18px;font-weight:700;padding:12px 0;">정산</div>
+    <div class="rounded-2xl p-5 mb-4" style="background:var(--accent);color:#fff;">
+      <div style="font-size:12px;opacity:.8;">이번 달 예정</div>
+      <div style="font-size:28px;font-weight:700;margin:4px 0;">${total.toLocaleString()}원</div>
+      <div class="flex gap-4 mt-3">
+        <div><div style="font-size:11px;opacity:.7;">입금</div><div style="font-size:15px;font-weight:600;">${paid.toLocaleString()}원</div></div>
+        <div><div style="font-size:11px;opacity:.7;">미납</div><div style="font-size:15px;font-weight:600;">${unpaid.toLocaleString()}원</div></div>
+      </div>
+    </div>
+    ${students.map(s=>`
+      <div class="rounded-2xl p-4 mb-2 card-shadow flex items-center justify-between" style="border:1px solid #f0f0f0;">
+        <div>
+          <div style="font-weight:600;font-size:14px;">${s.student_name}</div>
+          <div style="font-size:12px;color:var(--text-sub);">${(s.fee||0).toLocaleString()}원</div>
+        </div>
+        <div class="flex items-center gap-2">
+          ${payBadge(s.payment_status)}
+          ${s.payment_status !== '입금완료' ? `<button onclick="event.stopPropagation();confirmPayment('${s.__backendId}')" class="px-2 py-1 rounded-lg" style="background:var(--accent-light);color:var(--accent);font-size:11px;font-weight:500;">입금확인</button>` : ''}
+        </div>
+      </div>`).join('')}
+  </div>`;
+}
+
+async function confirmPayment(id) {
+  const s = allData.find(d=>d.__backendId===id);
+  if(!s) return;
+  const r = await window.dataSdk.update({...s, payment_status:'입금완료'});
+  if(!r.isOk) showToast('오류가 발생했어요');
+}
+
+// ===== TODO =====
+function renderTodoTab(el) {
+  const today = todayStr();
+  const todos = getTodos().filter(t => t.todo_date === today);
+  const done = todos.filter(t=>t.todo_done);
+  const notDone = todos.filter(t=>!t.todo_done);
+
+  // Auto suggestions
+  const unprepLessons = getLessons().filter(l=>l.lesson_date===today && !l.prep_done && l.status!=='결강');
+  const uncheckedHw = getLessons().filter(l=>l.lesson_date===today && !l.homework_checked && l.homework);
+  const unpaidStudents = getStudents().filter(s=>s.payment_status==='미납');
+  const pendingMakeup = getCancels().filter(c=>!c.makeup_done);
+
+  el.innerHTML = `<div class="fade-in">
+    <div class="flex items-center justify-between py-3">
+      <div style="font-size:18px;font-weight:700;">오늘 할 일</div>
+      <button onclick="openTodoForm()" class="px-3 py-1.5 rounded-full" style="background:var(--accent);color:#fff;font-size:12px;font-weight:500;">+ 추가</button>
+    </div>
+
+    ${(unprepLessons.length||uncheckedHw.length||unpaidStudents.length||pendingMakeup.length) ? `
+    <div style="font-size:12px;font-weight:600;color:var(--accent);margin-bottom:8px;">📋 자동 리마인더</div>
+    ${unprepLessons.map(l=>`<div class="flex items-center gap-2 rounded-xl p-3 mb-1" style="background:#fff8e1;"><span style="font-size:12px;">📚 ${getStudentName(l.lesson_student_id)} 수업 준비 필요</span></div>`).join('')}
+    ${uncheckedHw.map(l=>`<div class="flex items-center gap-2 rounded-xl p-3 mb-1" style="background:#e8faf0;"><span style="font-size:12px;">✏️ ${getStudentName(l.lesson_student_id)} 숙제 검사</span></div>`).join('')}
+    ${unpaidStudents.map(s=>`<div class="flex items-center gap-2 rounded-xl p-3 mb-1" style="background:#ffeaea;"><span style="font-size:12px;">💰 ${s.student_name} 미납 확인</span></div>`).join('')}
+    ${pendingMakeup.map(c=>`<div class="flex items-center gap-2 rounded-xl p-3 mb-1" style="background:#e8f4fd;"><span style="font-size:12px;">🔄 보강 일정 필요</span></div>`).join('')}
+    <div style="height:12px;"></div>` : ''}
+
+    ${notDone.length===0 && done.length===0 ? '<div class="text-center py-10" style="color:var(--text-sub);font-size:13px;">할 일을 추가해보세요 ✨</div>' : ''}
+    ${notDone.map(t=>`
+      <div class="flex items-center gap-3 rounded-xl p-3 mb-1" style="background:var(--surface);">
+        <button onclick="toggleTodo('${t.__backendId}',true)" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--accent);background:transparent;flex-shrink:0;cursor:pointer;"></button>
+        <span style="font-size:13px;flex:1;">${t.todo_text}</span>
+        <button onclick="deleteTodo('${t.__backendId}')" style="color:var(--text-sub);"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+      </div>`).join('')}
+    ${done.length ? `<div style="font-size:11px;color:var(--text-sub);margin:12px 0 6px;">완료됨</div>` : ''}
+    ${done.map(t=>`
+      <div class="flex items-center gap-3 rounded-xl p-3 mb-1" style="background:var(--surface);opacity:.5;">
+        <button onclick="toggleTodo('${t.__backendId}',false)" style="width:22px;height:22px;border-radius:50%;border:2px solid var(--accent);background:var(--accent);flex-shrink:0;cursor:pointer;display:flex;align-items:center;justify-content:center;"><i data-lucide="check" style="width:12px;height:12px;color:#fff;"></i></button>
+        <span style="font-size:13px;text-decoration:line-through;flex:1;">${t.todo_text}</span>
+        <button onclick="deleteTodo('${t.__backendId}')" style="color:var(--text-sub);"><i data-lucide="x" style="width:14px;height:14px;"></i></button>
+      </div>`).join('')}
+  </div>`;
+}
+
+async function toggleTodo(id, val) {
+  const t = allData.find(d=>d.__backendId===id);
+  if(!t) return;
+  await window.dataSdk.update({...t, todo_done: val});
+}
+async function deleteTodo(id) {
+  const t = allData.find(d=>d.__backendId===id);
+  if(!t) return;
+  await window.dataSdk.delete(t);
+}
+
+// ===== MODALS =====
+function openModal(html) {
+  document.getElementById('modal-container').innerHTML = html;
+  document.getElementById('modal-overlay').style.display = 'block';
+  document.getElementById('modal-container').style.display = 'block';
+  lucide.createIcons();
+}
+function closeModal() {
+  document.getElementById('modal-overlay').style.display = 'none';
+  document.getElementById('modal-container').style.display = 'none';
+}
+
+// ===== ADD MODAL (FAB) =====
+function openAddModal() {
+  openModal(`
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;">추가하기</div>
+    <div class="grid grid-cols-2 gap-3">
+      <button onclick="closeModal();openLessonForm();" class="rounded-2xl p-4 text-left card-shadow" style="border:1px solid #f0f0f0;">
+        <div style="width:36px;height:36px;border-radius:10px;background:var(--accent-light);display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><i data-lucide="book-open" style="width:18px;height:18px;color:var(--accent);"></i></div>
+        <div style="font-size:13px;font-weight:600;">수업 추가</div>
+      </button>
+      <button onclick="closeModal();openStudentForm();" class="rounded-2xl p-4 text-left card-shadow" style="border:1px solid #f0f0f0;">
+        <div style="width:36px;height:36px;border-radius:10px;background:#fff8e1;display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><i data-lucide="user-plus" style="width:18px;height:18px;color:#c49000;"></i></div>
+        <div style="font-size:13px;font-weight:600;">학생 추가</div>
+      </button>
+      <button onclick="closeModal();openTodoForm();" class="rounded-2xl p-4 text-left card-shadow" style="border:1px solid #f0f0f0;">
+        <div style="width:36px;height:36px;border-radius:10px;background:#e8f4fd;display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><i data-lucide="check-square" style="width:18px;height:18px;color:#3a8fd4;"></i></div>
+        <div style="font-size:13px;font-weight:600;">할 일 추가</div>
+      </button>
+      <button onclick="closeModal();openCancelForm();" class="rounded-2xl p-4 text-left card-shadow" style="border:1px solid #f0f0f0;">
+        <div style="width:36px;height:36px;border-radius:10px;background:#ffeaea;display:flex;align-items:center;justify-content:center;margin-bottom:8px;"><i data-lucide="x-circle" style="width:18px;height:18px;color:#d94a4a;"></i></div>
+        <div style="font-size:13px;font-weight:600;">결강 등록</div>
+      </button>
+    </div>
+    <button onclick="closeModal()" class="w-full mt-4 py-2.5 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">닫기</button>
+  `);
+}
+
+// ===== STUDENT FORM =====
+function openStudentForm(editId) {
+  const s = editId ? allData.find(d=>d.__backendId===editId) : null;
+  openModal(`
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;">${s?'학생 수정':'학생 추가'}</div>
+    <form id="student-form" onsubmit="saveStudent(event,'${editId||''}')">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">이름 *</label>
+      <input name="student_name" required value="${s?.student_name||''}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">연락처</label>
+      <input name="phone" value="${s?.phone||''}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">과목</label>
+      <input name="subject" value="${s?.subject||''}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">수업 요일</label>
+          <input name="day" value="${s?.day||''}" placeholder="월, 수" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">수업 시간</label>
+          <input name="time" value="${s?.time||''}" placeholder="15:00" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+        </div>
+      </div>
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">장소</label>
+      <input name="location" value="${s?.location||''}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">수업료 (원)</label>
+      <input name="fee" type="number" value="${s?.fee||''}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">입금 상태</label>
+      <select name="payment_status" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+        <option value="대기" ${s?.payment_status==='대기'?'selected':''}>대기</option>
+        <option value="입금완료" ${s?.payment_status==='입금완료'?'selected':''}>입금완료</option>
+        <option value="미납" ${s?.payment_status==='미납'?'selected':''}>미납</option>
+        <option value="부분입금" ${s?.payment_status==='부분입금'?'selected':''}>부분입금</option>
+      </select>
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">메모</label>
+      <textarea name="memo" rows="2" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);resize:none;">${s?.memo||''}</textarea>
+      <button type="submit" id="student-submit-btn" class="w-full py-3 rounded-xl" style="background:var(--accent);color:#fff;font-size:14px;font-weight:600;">${s?'수정 완료':'추가하기'}</button>
+      <button type="button" onclick="closeModal()" class="w-full mt-2 py-2.5 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">취소</button>
+    </form>
+  `);
+}
+
+async function saveStudent(e, editId) {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const btn = document.getElementById('student-submit-btn');
+  btn.textContent = '저장 중...'; btn.disabled = true;
+  const data = {
+    type: 'student',
+    student_name: f.get('student_name'),
+    phone: f.get('phone'),
+    subject: f.get('subject'),
+    day: f.get('day'),
+    time: f.get('time'),
+    location: f.get('location'),
+    fee: Number(f.get('fee'))||0,
+    payment_status: f.get('payment_status'),
+    memo: f.get('memo'),
+    created_at: new Date().toISOString()
+  };
+  let r;
+  if (editId) {
+    const orig = allData.find(d=>d.__backendId===editId);
+    r = await window.dataSdk.update({...orig, ...data});
+  } else {
+    if (allData.length >= 999) { showToast('데이터 한도에 도달했어요'); btn.textContent='추가하기'; btn.disabled=false; return; }
+    r = await window.dataSdk.create(data);
+  }
+  if (r.isOk) { closeModal(); showToast(editId?'수정 완료!':'학생 추가 완료!'); }
+  else { showToast('오류가 발생했어요'); btn.textContent=editId?'수정 완료':'추가하기'; btn.disabled=false; }
+}
+
+// ===== STUDENT DETAIL =====
+function openStudentDetail(id) {
+  const s = allData.find(d=>d.__backendId===id);
+  if(!s) return;
+  const lessons = getLessons().filter(l=>l.lesson_student_id===id).sort((a,b)=>b.lesson_date?.localeCompare(a.lesson_date));
+  const cancels = getCancels().filter(c=>c.lesson_student_id===id);
+
+  openModal(`
+    <div class="flex items-center gap-3 mb-4">
+      <div style="width:48px;height:48px;border-radius:50%;background:var(--accent-light);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:var(--accent);">${(s.student_name||'?')[0]}</div>
+      <div>
+        <div style="font-size:18px;font-weight:700;">${s.student_name}</div>
+        <div style="font-size:12px;color:var(--text-sub);">${s.subject||''} ${s.day?'· '+s.day:''} ${s.time||''}</div>
+      </div>
+    </div>
+    <div class="grid grid-cols-2 gap-2 mb-4">
+      <div class="rounded-xl p-3" style="background:var(--surface);"><div style="font-size:11px;color:var(--text-sub);">수업료</div><div style="font-size:15px;font-weight:600;">${(s.fee||0).toLocaleString()}원</div></div>
+      <div class="rounded-xl p-3" style="background:var(--surface);"><div style="font-size:11px;color:var(--text-sub);">입금</div><div style="font-size:15px;font-weight:600;">${payBadge(s.payment_status)}</div></div>
+    </div>
+    ${s.phone ? `<div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">📞 ${s.phone}</div>` : ''}
+    ${s.location ? `<div style="font-size:12px;color:var(--text-sub);margin-bottom:4px;">📍 ${s.location}</div>` : ''}
+    ${s.memo ? `<div style="font-size:12px;color:var(--text-sub);margin-bottom:8px;">📝 ${s.memo}</div>` : ''}
+
+    <div style="font-size:13px;font-weight:600;margin:12px 0 8px;">최근 수업</div>
+    ${lessons.length===0?'<div style="font-size:12px;color:var(--text-sub);">수업 기록이 없어요</div>':
+    lessons.slice(0,5).map(l=>`<div class="flex items-center justify-between rounded-lg p-2 mb-1" style="background:var(--surface);">
+      <span style="font-size:12px;">${l.lesson_date} ${l.time||''}</span>${statusBadge(l.status)}
+    </div>`).join('')}
+
+    ${cancels.length?`<div style="font-size:13px;font-weight:600;margin:12px 0 8px;">결강/보강</div>
+    ${cancels.map(c=>`<div class="flex items-center justify-between rounded-lg p-2 mb-1" style="background:var(--surface);">
+      <span style="font-size:12px;">결강: ${c.cancel_date||''}</span>
+      <span class="badge ${c.makeup_done?'badge-green':'badge-yellow'}">${c.makeup_done?'보강완료':'보강필요'}</span>
+    </div>`).join('')}`:''}
+
+    <div class="flex gap-2 mt-4">
+      <button onclick="closeModal();openStudentForm('${id}')" class="flex-1 py-2.5 rounded-xl" style="background:var(--accent);color:#fff;font-size:13px;font-weight:500;">수정</button>
+      <button onclick="deleteStudent('${id}')" id="del-student-btn" class="py-2.5 px-4 rounded-xl" style="background:#ffeaea;color:#d94a4a;font-size:13px;font-weight:500;">삭제</button>
+    </div>
+    <button onclick="closeModal()" class="w-full mt-2 py-2 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">닫기</button>
+  `);
+}
+
+async function deleteStudent(id) {
+  const s = allData.find(d=>d.__backendId===id);
+  if(!s) return;
+  const btn = document.getElementById('del-student-btn');
+  if (btn.dataset.confirmed) {
+    btn.textContent='삭제 중...'; btn.disabled=true;
+    const r = await window.dataSdk.delete(s);
+    if(r.isOk) { closeModal(); showToast('삭제 완료'); } else { showToast('오류 발생'); btn.textContent='삭제'; btn.disabled=false; }
+  } else {
+    btn.textContent='정말 삭제?'; btn.dataset.confirmed='1';
+    setTimeout(()=>{ if(btn){ btn.textContent='삭제'; delete btn.dataset.confirmed; }},3000);
+  }
+}
+
+// ===== LESSON FORM =====
+function openLessonForm(editId) {
+  const l = editId ? allData.find(d=>d.__backendId===editId) : null;
+  const students = getStudents();
+  openModal(`
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;">${l?'수업 수정':'수업 추가'}</div>
+    <form id="lesson-form" onsubmit="saveLesson(event,'${editId||''}')">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">학생 *</label>
+      <select name="lesson_student_id" required class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+        <option value="">선택</option>
+        ${students.map(s=>`<option value="${s.__backendId}" ${l?.lesson_student_id===s.__backendId?'selected':''}>${s.student_name}</option>`).join('')}
+      </select>
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">날짜 *</label>
+      <input name="lesson_date" type="date" required value="${l?.lesson_date||todayStr()}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">시간</label>
+          <input name="time" value="${l?.time||''}" placeholder="15:00" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+        </div>
+        <div>
+          <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">과목</label>
+          <input name="subject" value="${l?.subject||''}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+        </div>
+      </div>
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">장소</label>
+      <input name="location" value="${l?.location||''}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">수업 방식</label>
+      <select name="method" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+        <option value="대면" ${l?.method==='대면'?'selected':''}>대면</option>
+        <option value="온라인" ${l?.method==='온라인'?'selected':''}>온라인</option>
+      </select>
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">숙제</label>
+      <input name="homework" value="${l?.homework||''}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">메모</label>
+      <textarea name="memo" rows="2" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);resize:none;">${l?.memo||''}</textarea>
+      <button type="submit" id="lesson-submit-btn" class="w-full py-3 rounded-xl" style="background:var(--accent);color:#fff;font-size:14px;font-weight:600;">${l?'수정 완료':'추가하기'}</button>
+      <button type="button" onclick="closeModal()" class="w-full mt-2 py-2.5 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">취소</button>
+    </form>
+  `);
+}
+
+async function saveLesson(e, editId) {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const btn = document.getElementById('lesson-submit-btn');
+  btn.textContent='저장 중...'; btn.disabled=true;
+  const data = {
+    type:'lesson', lesson_student_id:f.get('lesson_student_id'), lesson_date:f.get('lesson_date'),
+    time:f.get('time'), subject:f.get('subject'), location:f.get('location'), method:f.get('method'),
+    homework:f.get('homework'), homework_checked:false, prep_done:false, status:'예정', memo:f.get('memo'),
+    created_at:new Date().toISOString()
+  };
+  let r;
+  if(editId) { const orig=allData.find(d=>d.__backendId===editId); r=await window.dataSdk.update({...orig,...data,status:orig.status,homework_checked:orig.homework_checked,prep_done:orig.prep_done}); }
+  else { if(allData.length>=999){showToast('데이터 한도 도달');btn.textContent='추가하기';btn.disabled=false;return;} r=await window.dataSdk.create(data); }
+  if(r.isOk){closeModal();showToast(editId?'수정 완료!':'수업 추가 완료!');}
+  else{showToast('오류 발생');btn.textContent=editId?'수정 완료':'추가하기';btn.disabled=false;}
+}
+
+// ===== LESSON DETAIL =====
+function openLessonDetail(id) {
+  const l = allData.find(d=>d.__backendId===id);
+  if(!l) return;
+  openModal(`
+    <div style="font-size:16px;font-weight:600;margin-bottom:4px;">${getStudentName(l.lesson_student_id)}</div>
+    <div style="font-size:12px;color:var(--text-sub);margin-bottom:16px;">${l.lesson_date} ${l.time||''} ${statusBadge(l.status)}</div>
+    <div class="grid grid-cols-2 gap-2 mb-4">
+      <div class="rounded-xl p-3" style="background:var(--surface);"><div style="font-size:11px;color:var(--text-sub);">과목</div><div style="font-size:13px;font-weight:500;">${l.subject||'-'}</div></div>
+      <div class="rounded-xl p-3" style="background:var(--surface);"><div style="font-size:11px;color:var(--text-sub);">장소</div><div style="font-size:13px;font-weight:500;">${l.location||'-'}</div></div>
+      <div class="rounded-xl p-3" style="background:var(--surface);"><div style="font-size:11px;color:var(--text-sub);">방식</div><div style="font-size:13px;font-weight:500;">${l.method||'-'}</div></div>
+      <div class="rounded-xl p-3" style="background:var(--surface);"><div style="font-size:11px;color:var(--text-sub);">숙제</div><div style="font-size:13px;font-weight:500;">${l.homework||'-'}</div></div>
+    </div>
+
+    <div class="flex gap-2 mb-3">
+      <button onclick="toggleLessonField('${id}','prep_done',${!l.prep_done})" class="flex-1 py-2 rounded-xl flex items-center justify-center gap-1" style="background:${l.prep_done?'var(--accent-light)':'var(--surface)'};font-size:12px;font-weight:500;color:${l.prep_done?'var(--accent)':'var(--text-sub)'};">
+        ${l.prep_done?'✅':'☐'} 준비 완료
+      </button>
+      <button onclick="toggleLessonField('${id}','homework_checked',${!l.homework_checked})" class="flex-1 py-2 rounded-xl flex items-center justify-center gap-1" style="background:${l.homework_checked?'var(--accent-light)':'var(--surface)'};font-size:12px;font-weight:500;color:${l.homework_checked?'var(--accent)':'var(--text-sub)'};">
+        ${l.homework_checked?'✅':'☐'} 숙제 검사
+      </button>
+    </div>
+
+    ${l.memo?`<div style="font-size:12px;color:var(--text-sub);margin-bottom:12px;">📝 ${l.memo}</div>`:''}
+
+    <div class="flex gap-2">
+      ${l.status==='예정'?`<button onclick="updateLessonStatus('${id}','완료')" class="flex-1 py-2.5 rounded-xl" style="background:var(--accent);color:#fff;font-size:13px;font-weight:500;">수업 완료</button>
+      <button onclick="updateLessonStatus('${id}','결강')" class="py-2.5 px-4 rounded-xl" style="background:#ffeaea;color:#d94a4a;font-size:13px;">결강</button>`:''}
+      <button onclick="closeModal();openLessonForm('${id}')" class="py-2.5 px-4 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">수정</button>
+    </div>
+    <button onclick="deleteLesson('${id}')" id="del-lesson-btn" class="w-full mt-2 py-2 rounded-xl" style="font-size:12px;color:#d94a4a;">삭제</button>
+    <button onclick="closeModal()" class="w-full mt-1 py-2 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">닫기</button>
+  `);
+}
+
+async function toggleLessonField(id,field,val) {
+  const l = allData.find(d=>d.__backendId===id);
+  if(!l) return;
+  const upd = {...l}; upd[field]=val;
+  await window.dataSdk.update(upd);
+  setTimeout(()=>openLessonDetail(id),300);
+}
+
+async function updateLessonStatus(id,status) {
+  const l = allData.find(d=>d.__backendId===id);
+  if(!l) return;
+  await window.dataSdk.update({...l, status});
+  if(status==='결강') {
+    if(allData.length<999) await window.dataSdk.create({type:'cancel',lesson_student_id:l.lesson_student_id,cancel_date:l.lesson_date,cancel_reason:'',original_lesson_id:id,makeup_date:'',makeup_done:false,created_at:new Date().toISOString()});
+  }
+  closeModal(); showToast(status==='완료'?'수업 완료!':'결강 처리됨');
+}
+
+async function deleteLesson(id) {
+  const l = allData.find(d=>d.__backendId===id);
+  if(!l) return;
+  const btn = document.getElementById('del-lesson-btn');
+  if(btn.dataset.confirmed){btn.textContent='삭제 중...';btn.disabled=true;const r=await window.dataSdk.delete(l);if(r.isOk){closeModal();showToast('삭제 완료');}else{showToast('오류');btn.textContent='삭제';btn.disabled=false;}}
+  else{btn.textContent='정말 삭제?';btn.dataset.confirmed='1';setTimeout(()=>{if(btn){btn.textContent='삭제';delete btn.dataset.confirmed;}},3000);}
+}
+
+// ===== CANCEL FORM =====
+function openCancelForm() {
+  const students = getStudents();
+  openModal(`
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;">결강 등록</div>
+    <form id="cancel-form" onsubmit="saveCancel(event)">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">학생</label>
+      <select name="lesson_student_id" required class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+        <option value="">선택</option>
+        ${students.map(s=>`<option value="${s.__backendId}">${s.student_name}</option>`).join('')}
+      </select>
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">결강 날짜</label>
+      <input name="cancel_date" type="date" required value="${todayStr()}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <label style="font-size:12px;color:var(--text-sub);display:block;margin-bottom:4px;">사유</label>
+      <input name="cancel_reason" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <button type="submit" id="cancel-submit-btn" class="w-full py-3 rounded-xl" style="background:var(--accent);color:#fff;font-size:14px;font-weight:600;">등록</button>
+      <button type="button" onclick="closeModal()" class="w-full mt-2 py-2.5 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">취소</button>
+    </form>
+  `);
+}
+
+async function saveCancel(e) {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const btn = document.getElementById('cancel-submit-btn');
+  btn.textContent='저장 중...'; btn.disabled=true;
+  if(allData.length>=999){showToast('데이터 한도 도달');btn.textContent='등록';btn.disabled=false;return;}
+  const r = await window.dataSdk.create({type:'cancel',lesson_student_id:f.get('lesson_student_id'),cancel_date:f.get('cancel_date'),cancel_reason:f.get('cancel_reason'),original_lesson_id:'',makeup_date:'',makeup_done:false,created_at:new Date().toISOString()});
+  if(r.isOk){closeModal();showToast('결강 등록 완료');}else{showToast('오류');btn.textContent='등록';btn.disabled=false;}
+}
+
+// ===== TODO FORM =====
+function openTodoForm() {
+  openModal(`
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;">할 일 추가</div>
+    <form id="todo-form" onsubmit="saveTodo(event)">
+      <input name="todo_text" required placeholder="할 일을 입력하세요" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <input name="todo_date" type="date" value="${todayStr()}" class="w-full rounded-xl p-3 mb-3" style="border:1px solid #eee;font-size:13px;background:var(--surface);">
+      <button type="submit" id="todo-submit-btn" class="w-full py-3 rounded-xl" style="background:var(--accent);color:#fff;font-size:14px;font-weight:600;">추가</button>
+      <button type="button" onclick="closeModal()" class="w-full mt-2 py-2.5 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">취소</button>
+    </form>
+  `);
+}
+
+async function saveTodo(e) {
+  e.preventDefault();
+  const f = new FormData(e.target);
+  const btn = document.getElementById('todo-submit-btn');
+  btn.textContent='저장 중...'; btn.disabled=true;
+  if(allData.length>=999){showToast('데이터 한도 도달');btn.textContent='추가';btn.disabled=false;return;}
+  const r = await window.dataSdk.create({type:'todo',todo_text:f.get('todo_text'),todo_date:f.get('todo_date'),todo_done:false,created_at:new Date().toISOString()});
+  if(r.isOk){closeModal();showToast('할 일 추가!');}else{showToast('오류');btn.textContent='추가';btn.disabled=false;}
+}
+
+// ===== NOTIFICATIONS =====
+function showNotifications() {
+  const unpaid = getStudents().filter(s=>s.payment_status==='미납');
+  const makeup = getCancels().filter(c=>!c.makeup_done);
+  const todayL = getLessons().filter(l=>l.lesson_date===todayStr() && l.status==='예정');
+  openModal(`
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;">알림</div>
+    ${todayL.map(l=>`<div class="flex items-center gap-3 p-3 rounded-xl mb-2" style="background:var(--surface);"><div style="font-size:12px;">📚 ${getStudentName(l.lesson_student_id)} ${l.time||''} 수업 예정</div></div>`).join('')}
+    ${unpaid.map(s=>`<div class="flex items-center gap-3 p-3 rounded-xl mb-2" style="background:#ffeaea;"><div style="font-size:12px;">💰 ${s.student_name} 수업료 미납</div></div>`).join('')}
+    ${makeup.map(c=>`<div class="flex items-center gap-3 p-3 rounded-xl mb-2" style="background:#e8f4fd;"><div style="font-size:12px;">🔄 ${getStudentName(c.lesson_student_id)} 보강 필요</div></div>`).join('')}
+    ${todayL.length===0&&unpaid.length===0&&makeup.length===0?'<div class="text-center py-8" style="color:var(--text-sub);font-size:13px;">새로운 알림이 없어요 ✨</div>':''}
+    <button onclick="closeModal()" class="w-full mt-3 py-2.5 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">닫기</button>
+  `);
+}
+
+// ===== SETTINGS =====
+function showSettings() {
+  openModal(`
+    <div style="font-size:16px;font-weight:600;margin-bottom:16px;">설정</div>
+    <div class="rounded-xl p-4 mb-2" style="background:var(--surface);">
+      <div style="font-size:14px;font-weight:500;">프로필</div>
+      <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">선생님 정보를 수정하세요</div>
+    </div>
+    <div class="rounded-xl p-4 mb-2" style="background:var(--surface);">
+      <div style="font-size:14px;font-weight:500;">알림 설정</div>
+      <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">수업, 입금, 보강 알림</div>
+    </div>
+    <div class="rounded-xl p-4 mb-2" style="background:var(--surface);">
+      <div style="font-size:14px;font-weight:500;">정산 설정</div>
+      <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">정산 주기, 표시 방식</div>
+    </div>
+    <div class="rounded-xl p-4 mb-2" style="background:var(--surface);">
+      <div class="flex items-center justify-between">
+        <div>
+          <div style="font-size:14px;font-weight:500;">데이터</div>
+          <div style="font-size:12px;color:var(--text-sub);margin-top:2px;">학생 ${getStudents().length}명 · 수업 ${getLessons().length}개</div>
+        </div>
+      </div>
+    </div>
+    <button onclick="closeModal()" class="w-full mt-3 py-2.5 rounded-xl" style="background:var(--surface);font-size:13px;color:var(--text-sub);">닫기</button>
+  `);
+}
+
+// ===== TOAST =====
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.textContent = msg;
+  t.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:12px;font-size:13px;z-index:200;animation:fadeIn .3s;';
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(), 2000);
+}
+
+// Init icons
+setTimeout(()=>lucide.createIcons(), 100);
+</script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9e862e1dd6888090',t:'MTc3NTUzNTAwMS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

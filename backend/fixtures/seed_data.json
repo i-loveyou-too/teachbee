@@ -1,0 +1,187 @@
+[
+  {
+    "model": "students.student",
+    "pk": 1,
+    "fields": {
+      "name": "김준호",
+      "phone": "010-1234-5678",
+      "subject": "영어",
+      "regular_day": "월, 수, 금",
+      "regular_time": "15:00",
+      "default_location": "강남 카페",
+      "lesson_method": "대면",
+      "fee": 50000,
+      "payment_status": "입금완료",
+      "memo": "발음 교정 중심",
+      "created_at": "2026-04-01T00:00:00Z",
+      "updated_at": "2026-04-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "students.student",
+    "pk": 2,
+    "fields": {
+      "name": "이수지",
+      "phone": "010-9876-5432",
+      "subject": "수학",
+      "regular_day": "화, 목",
+      "regular_time": "16:00",
+      "default_location": "온라인",
+      "lesson_method": "온라인",
+      "fee": 45000,
+      "payment_status": "미납",
+      "memo": "고등수학 기본 복습",
+      "created_at": "2026-04-01T00:00:00Z",
+      "updated_at": "2026-04-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "students.student",
+    "pk": 3,
+    "fields": {
+      "name": "박민준",
+      "phone": "010-5555-6666",
+      "subject": "과학",
+      "regular_day": "월, 금",
+      "regular_time": "17:00",
+      "default_location": "자택",
+      "lesson_method": "대면",
+      "fee": 55000,
+      "payment_status": "입금완료",
+      "memo": "",
+      "created_at": "2026-04-01T00:00:00Z",
+      "updated_at": "2026-04-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "students.student",
+    "pk": 4,
+    "fields": {
+      "name": "최다은",
+      "phone": "010-7777-8888",
+      "subject": "국어",
+      "regular_day": "수, 토",
+      "regular_time": "14:00",
+      "default_location": "도서관",
+      "lesson_method": "대면",
+      "fee": 40000,
+      "payment_status": "대기",
+      "memo": "논술 준비 중",
+      "created_at": "2026-04-01T00:00:00Z",
+      "updated_at": "2026-04-01T00:00:00Z"
+    }
+  },
+  {
+    "model": "lessons.lesson",
+    "pk": 1,
+    "fields": {
+      "student": 1,
+      "lesson_date": "2026-04-07",
+      "start_time": "15:00",
+      "end_time": null,
+      "subject": "영어 발음",
+      "location": "강남 카페",
+      "method": "대면",
+      "status": "예정",
+      "homework": "p.45-50 문제 풀기",
+      "homework_checked": false,
+      "prep_done": false,
+      "memo": "",
+      "created_at": "2026-04-07T00:00:00Z",
+      "updated_at": "2026-04-07T00:00:00Z"
+    }
+  },
+  {
+    "model": "lessons.lesson",
+    "pk": 2,
+    "fields": {
+      "student": 2,
+      "lesson_date": "2026-04-07",
+      "start_time": "16:00",
+      "end_time": null,
+      "subject": "수학 문제풀이",
+      "location": "온라인",
+      "method": "온라인",
+      "status": "예정",
+      "homework": "",
+      "homework_checked": false,
+      "prep_done": true,
+      "memo": "",
+      "created_at": "2026-04-07T00:00:00Z",
+      "updated_at": "2026-04-07T00:00:00Z"
+    }
+  },
+  {
+    "model": "lessons.lesson",
+    "pk": 3,
+    "fields": {
+      "student": 3,
+      "lesson_date": "2026-04-05",
+      "start_time": "17:00",
+      "end_time": null,
+      "subject": "생명과학 복습",
+      "location": "자택",
+      "method": "대면",
+      "status": "완료",
+      "homework": "교과서 3단원 정리",
+      "homework_checked": true,
+      "prep_done": true,
+      "memo": "집중력 좋음",
+      "created_at": "2026-04-05T00:00:00Z",
+      "updated_at": "2026-04-05T00:00:00Z"
+    }
+  },
+  {
+    "model": "lessons.cancelmakeup",
+    "pk": 1,
+    "fields": {
+      "student": 4,
+      "original_lesson": null,
+      "cancel_date": "2026-04-03",
+      "cancel_reason": "학생 아파서 결강",
+      "makeup_date": null,
+      "makeup_done": false,
+      "created_at": "2026-04-03T00:00:00Z",
+      "updated_at": "2026-04-03T00:00:00Z"
+    }
+  },
+  {
+    "model": "todos.todo",
+    "pk": 1,
+    "fields": {
+      "text": "수지 학생 입금 확인 메시지 보내기",
+      "due_date": "2026-04-07",
+      "done": false,
+      "related_student": 2,
+      "related_lesson": null,
+      "created_at": "2026-04-07T00:00:00Z",
+      "updated_at": "2026-04-07T00:00:00Z"
+    }
+  },
+  {
+    "model": "todos.todo",
+    "pk": 2,
+    "fields": {
+      "text": "어제 숙제 채점하기",
+      "due_date": "2026-04-07",
+      "done": false,
+      "related_student": null,
+      "related_lesson": null,
+      "created_at": "2026-04-07T00:00:00Z",
+      "updated_at": "2026-04-07T00:00:00Z"
+    }
+  },
+  {
+    "model": "todos.todo",
+    "pk": 3,
+    "fields": {
+      "text": "다음 주 수업 계획 정리",
+      "due_date": "2026-04-07",
+      "done": true,
+      "related_student": null,
+      "related_lesson": null,
+      "created_at": "2026-04-07T00:00:00Z",
+      "updated_at": "2026-04-07T00:00:00Z"
+    }
+  }
+]
