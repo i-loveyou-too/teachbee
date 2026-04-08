@@ -41,9 +41,9 @@ export default function BillingPolicyModal({ open, onClose, studentId, policy, o
     }
   };
 
-  const inputCls = 'w-full rounded-xl p-3 mb-3 text-[13px] border border-[#eee]';
+  const inputCls = 'w-full min-h-[44px] rounded-xl px-3 py-2.5 mb-2.5 text-[13px] leading-[1.4] border border-[#eee]';
   const inputStyle = { background: '#f7f8fa', outline: 'none' };
-  const labelCls = 'block text-[12px] mb-1';
+  const labelCls = 'block text-[12px] mb-1 leading-[1.35]';
   const labelStyle = { color: '#888' };
 
   return (
@@ -63,34 +63,39 @@ export default function BillingPolicyModal({ open, onClose, studentId, policy, o
           <option value="extra">추가</option>
         </select>
 
-        <label className={labelCls} style={labelStyle}>청구 주기 (수업 횟수) *</label>
-        <input
-          name="cycle_lesson_count"
-          type="number"
-          min="1"
-          required
-          defaultValue={policy?.cycle_lesson_count ?? 4}
-          className={inputCls}
-          style={inputStyle}
-        />
+        <div className="mb-2.5 grid grid-cols-2 gap-2.5">
+          <div>
+            <label className={labelCls} style={labelStyle}>청구 주기 (수업 횟수) *</label>
+            <input
+              name="cycle_lesson_count"
+              type="number"
+              min="1"
+              required
+              defaultValue={policy?.cycle_lesson_count ?? 4}
+              className={`${inputCls} mb-0`}
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>수업료 (원) *</label>
+            <input
+              name="fee_amount"
+              type="number"
+              min="0"
+              required
+              defaultValue={policy?.fee_amount ?? 0}
+              className={`${inputCls} mb-0`}
+              style={inputStyle}
+            />
+          </div>
+        </div>
 
-        <label className={labelCls} style={labelStyle}>수업료 (원) *</label>
-        <input
-          name="fee_amount"
-          type="number"
-          min="0"
-          required
-          defaultValue={policy?.fee_amount ?? 0}
-          className={inputCls}
-          style={inputStyle}
-        />
-
-        <label className={labelCls} style={labelStyle}>
+        <label className="mb-2.5 flex items-center gap-2 text-[12px] leading-[1.35]" style={{ color: '#666' }}>
           <input
             name="is_active"
             type="checkbox"
             defaultChecked={policy?.is_active ?? true}
-            style={{ marginRight: 6 }}
+            style={{ width: 15, height: 15, margin: 0, accentColor: '#8FDCCF' }}
           />
           활성화
         </label>
@@ -100,26 +105,28 @@ export default function BillingPolicyModal({ open, onClose, studentId, policy, o
           name="memo"
           rows={2}
           defaultValue={policy?.memo ?? ''}
-          className={inputCls}
+          className={`${inputCls} mb-0 min-h-[68px]`}
           style={{ ...inputStyle, resize: 'none' }}
         />
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full py-3 rounded-xl text-[14px] font-semibold text-white"
-          style={{ background: '#8FDCCF', opacity: saving ? 0.7 : 1 }}
-        >
-          {saving ? '저장 중...' : '저장하기'}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-full mt-2 py-2.5 rounded-xl text-[13px]"
-          style={{ background: '#f7f8fa', color: '#888' }}
-        >
-          취소
-        </button>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="submit"
+            disabled={saving}
+            className="h-11 w-full rounded-xl text-[14px] font-semibold text-white"
+            style={{ background: '#8FDCCF', opacity: saving ? 0.7 : 1 }}
+          >
+            {saving ? '저장 중...' : '저장하기'}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-11 w-full rounded-xl text-[14px] font-semibold"
+            style={{ background: '#f7f8fa', color: '#888' }}
+          >
+            취소
+          </button>
+        </div>
       </form>
     </Modal>
   );

@@ -6,7 +6,9 @@ import AppShell from '@/components/layout/AppShell';
 import AppHeader from '@/components/layout/AppHeader';
 import Modal from '@/components/common/Modal';
 import LessonFormSheet from '@/components/lessons/LessonFormSheet';
-import { getHomeDashboard, getLessons, updateTodo, updateLesson, getTodos, createTodo, completeLesson } from '@/lib/api';
+import StudentForm from '@/components/students/StudentForm';
+import TodoForm from '@/components/todo/TodoForm';
+import { getHomeDashboard, getLessons, updateTodo, updateLesson, getTodos, createTodo, createStudent, completeLesson } from '@/lib/api';
 import type { DashboardSummary, Lesson, Todo } from '@/lib/types';
 import { DEFAULT_STUDENT_COLOR_KEY, STUDENT_COLOR_BY_ID, getStudentPalette } from '@/lib/constants';
 import { todayStr } from '@/lib/utils';
@@ -252,7 +254,19 @@ function LessonDetailModal({
   );
 }
 
-function AddMenuModal({ onClose, onAddLesson }: { onClose: () => void; onAddLesson: () => void }) {
+function AddMenuModal({
+  onClose,
+  onAddLesson,
+  onAddStudent,
+  onAddTodo,
+  onAddMakeup,
+}: {
+  onClose: () => void;
+  onAddLesson: () => void;
+  onAddStudent: () => void;
+  onAddTodo: () => void;
+  onAddMakeup: () => void;
+}) {
   const items = [
     { icon: '+', label: '수업 추가', bg: '#EEF9F6', action: 'addLesson' },
     { icon: '+', label: '학생 추가', bg: '#fff8e1', action: 'addStudent' },
@@ -264,6 +278,9 @@ function AddMenuModal({ onClose, onAddLesson }: { onClose: () => void; onAddLess
     if (action === 'addLesson') {
       onAddLesson();
     }
+    if (action === 'addStudent') onAddStudent();
+    if (action === 'addTodo') onAddTodo();
+    if (action === 'addMakeup') onAddMakeup();
     onClose();
   };
 
@@ -309,6 +326,8 @@ export default function HomePage() {
   const [addMenuOpen, setAddMenuOpen] = useState(false);
   const [lessonFormOpen, setLessonFormOpen] = useState(false);
   const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
+  const [studentFormOpen, setStudentFormOpen] = useState(false);
+  const [todoFormOpen, setTodoFormOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
 
   const oneWeek = useMemo(() => buildOneWeek(), []);
@@ -477,7 +496,32 @@ export default function HomePage() {
 
   return (
     <AppShell>
-      <AppHeader greeting="오늘도 좋은 수업 되세요 🍯" />
+      <AppHeader
+        greeting="오늘도 좋은 수업 되세요 🍯"
+        rightActions={(
+          <button
+            onClick={() => setAddMenuOpen(true)}
+            aria-label="수업 추가"
+            title="수업 추가"
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: '50%',
+              background: '#f7f8fa',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              border: 'none',
+              cursor: 'pointer',
+            }}
+          >
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#8FDCCF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M12 5v14" />
+              <path d="M5 12h14" />
+            </svg>
+          </button>
+        )}
+      />
 
       <div className="animate-fade-in" style={{ padding: '12px 20px 100px', display: 'flex', flexDirection: 'column', gap: 20 }}>
         <div className="glass-card" style={{ ...cardShell, padding: '16px 12px', borderRadius: 28 }}>
@@ -543,21 +587,6 @@ export default function HomePage() {
                 )}
               </div>
             </div>
-            <button
-              onClick={() => setAddMenuOpen(true)}
-              style={{
-                padding: '8px 14px',
-                borderRadius: 999,
-                background: '#EEF9F6',
-                color: '#8FDCCF',
-                fontSize: 12,
-                fontWeight: 700,
-                border: 'none',
-                cursor: 'pointer',
-              }}
-            >
-              + 수업 추가
-            </button>
           </div>
 
           {dayLessons.length === 0 ? (
@@ -728,32 +757,6 @@ export default function HomePage() {
         )}
       </div>
 
-      <button
-        onClick={() => setAddMenuOpen(true)}
-        style={{
-          position: 'fixed',
-          width: 58,
-          height: 58,
-          borderRadius: 24,
-          background: 'rgba(92, 198, 186, 0.9)',
-          backdropFilter: 'blur(8px)',
-          color: '#fff',
-          bottom: 100,
-          right: 20,
-          boxShadow: '0 12px 32px rgba(92,198,186,0.4), inset 0 2px 2px rgba(255,255,255,0.3)',
-          zIndex: 1000,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          fontSize: 32,
-          fontWeight: 300,
-          border: 'none',
-          cursor: 'pointer',
-        }}
-      >
-        +
-      </button>
-
       <LessonDetailModal
         lesson={selectedLesson}
         date={selectedDate}
@@ -785,8 +788,31 @@ export default function HomePage() {
             setEditingLesson(null);
             setLessonFormOpen(true);
           }}
+          onAddStudent={() => setStudentFormOpen(true)}
+          onAddTodo={() => setTodoFormOpen(true)}
+          onAddMakeup={() => {
+            setEditingLesson(null);
+            setLessonFormOpen(true);
+          }}
         />
       )}
+
+      <StudentForm
+        open={studentFormOpen}
+        onClose={() => setStudentFormOpen(false)}
+        onSave={async (data) => {
+          await createStudent(data);
+        }}
+      />
+
+      <TodoForm
+        open={todoFormOpen}
+        onClose={() => setTodoFormOpen(false)}
+        onSave={async (data) => {
+          await createTodo(data);
+          await loadData();
+        }}
+      />
     </AppShell>
   );
 }

@@ -149,10 +149,19 @@ function StudentFormModal({
   onSave: (data: StudentFormData) => void;
 }) {
   const inputStyle: React.CSSProperties = {
-    width: '100%', borderRadius: 12, padding: 12, marginBottom: 12,
-    border: '1px solid #eee', background: '#f7f8fa', fontSize: 13, outline: 'none',
+    width: '100%', minHeight: 44, borderRadius: 12, padding: '10px 12px', marginBottom: 10,
+    border: '1px solid #eee', background: '#f7f8fa', fontSize: 13, lineHeight: 1.4, fontFamily: 'inherit', outline: 'none', boxSizing: 'border-box',
   };
-  const labelStyle: React.CSSProperties = { fontSize: 12, color: '#888', display: 'block', marginBottom: 4 };
+  const labelStyle: React.CSSProperties = { fontSize: 12, color: '#888', display: 'block', marginBottom: 4, lineHeight: 1.35, fontFamily: 'inherit' };
+  const actionButtonStyle: React.CSSProperties = {
+    minHeight: 46,
+    borderRadius: 12,
+    fontSize: 14,
+    fontWeight: 600,
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  };
 
   const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -166,7 +175,7 @@ function StudentFormModal({
       payment_status: (fd.get('payment_status') as PaymentStatus) ?? '대기',
       memo: fd.get('memo') as string,
     } as any);
-    onClose();
+    // Close is handled by parent on successful save.
   };
 
   return (
@@ -181,14 +190,14 @@ function StudentFormModal({
         <label style={labelStyle}>과목</label>
         <input name="subject" defaultValue={student?.subject ?? ''} style={inputStyle} />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
             <label style={labelStyle}>수업 요일</label>
-            <input name="regular_day" defaultValue={student?.regular_day ?? ''} placeholder="월, 수" style={inputStyle} />
+            <input name="regular_day" defaultValue={student?.regular_day ?? ''} placeholder="월, 수" style={{ ...inputStyle, marginBottom: 0 }} />
           </div>
           <div>
             <label style={labelStyle}>수업 시간</label>
-            <input name="regular_time" type="time" defaultValue={student?.regular_time ?? ''} style={inputStyle} />
+            <input name="regular_time" type="time" defaultValue={student?.regular_time ?? ''} style={{ ...inputStyle, marginBottom: 0 }} />
           </div>
         </div>
 
@@ -201,26 +210,33 @@ function StudentFormModal({
           <option value="온라인">온라인</option>
         </select>
 
-        <label style={labelStyle}>수업료 (원)</label>
-        <input name="fee" type="number" defaultValue={student?.fee ?? ''} style={inputStyle} />
-
-        <label style={labelStyle}>입금 상태</label>
-        <select name="payment_status" defaultValue={student?.payment_status ?? '대기'} style={inputStyle}>
-          <option value="대기">대기</option>
-          <option value="입금완료">입금완료</option>
-          <option value="미납">미납</option>
-          <option value="부분입금">부분입금</option>
-        </select>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 10 }}>
+          <div>
+            <label style={labelStyle}>수업료 (원)</label>
+            <input name="fee" type="number" defaultValue={student?.fee ?? ''} style={{ ...inputStyle, marginBottom: 0 }} />
+          </div>
+          <div>
+            <label style={labelStyle}>입금 상태</label>
+            <select name="payment_status" defaultValue={student?.payment_status ?? '대기'} style={{ ...inputStyle, marginBottom: 0 }}>
+              <option value="대기">대기</option>
+              <option value="입금완료">입금완료</option>
+              <option value="미납">미납</option>
+              <option value="부분입금">부분입금</option>
+            </select>
+          </div>
+        </div>
 
         <label style={labelStyle}>메모</label>
-        <textarea name="memo" rows={2} defaultValue={student?.memo ?? ''} style={{ ...inputStyle, resize: 'none' }} />
+        <textarea name="memo" rows={2} defaultValue={student?.memo ?? ''} style={{ ...inputStyle, minHeight: 68, marginBottom: 0, resize: 'none' }} />
 
-        <button type="submit" style={{ width: '100%', padding: '14px 0', borderRadius: 12, background: '#8FDCCF', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}>
-          {student ? '수정 완료' : '추가하기'}
-        </button>
-        <button type="button" onClick={onClose} style={{ width: '100%', marginTop: 8, padding: '10px 0', borderRadius: 12, background: '#f7f8fa', color: '#888', fontSize: 13, border: 'none', cursor: 'pointer' }}>
-          취소
-        </button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginTop: 12 }}>
+          <button type="submit" style={{ ...actionButtonStyle, background: '#8FDCCF', color: '#fff' }}>
+            {student ? '수정 완료' : '추가하기'}
+          </button>
+          <button type="button" onClick={onClose} style={{ ...actionButtonStyle, background: '#f7f8fa', color: '#888' }}>
+            취소
+          </button>
+        </div>
       </form>
     </Modal>
   );
@@ -285,7 +301,9 @@ export default function StudentsPage() {
       const updated = await getStudents();
       setStudents(updated);
       setFormOpen(false);
-    } catch (err) { alert('정보 저장에 실패했습니다.'); }
+    } catch (err) {
+      alert((err as Error)?.message ?? '정보 저장에 실패했습니다.');
+    }
   };
 
   const handleDelete = async (id: number) => {
@@ -380,7 +398,7 @@ export default function StudentsPage() {
           cancels={cancels}
           onClose={() => setDetailStudent(null)}
           onEdit={() => { setEditStudent(detailStudent); setDetailStudent(null); setFormOpen(true); }}
-          onDelete={id => setStudents(prev => prev.filter(s => s.id !== id))}
+          onDelete={handleDelete}
         />
       )}
 

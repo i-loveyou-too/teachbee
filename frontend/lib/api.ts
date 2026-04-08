@@ -27,8 +27,8 @@ const API_PREFIX = '/api';
 const USE_MOCK = false; // [CRITICAL] Mock 모드를 강제로 비활성화하여 실제 API만 사용
 
 const ENDPOINTS = {
-  students: '/teacher/students/',
-  lessons: '/teacher/classes/',
+  students: '/students/',
+  lessons: '/lessons/',
   todos: '/todos/',
   payments: '/payments/',
   cancelMakeups: '/cancel-makeups/',
@@ -44,16 +44,46 @@ const ENDPOINTS = {
 } as const;
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
-  const res = await fetch(`${API_BASE}${API_PREFIX}${path}`, {
+  const method = (options?.method ?? 'GET').toUpperCase();
+  const url = `${API_BASE}${API_PREFIX}${path}`;
+  const res = await fetch(url, {
     ...options,
     headers: { 'Content-Type': 'application/json', ...options?.headers },
   });
-  if (!res.ok) throw new Error(`API Error: ${res.status}`);
-  return res.json();
+
+  const contentType = res.headers.get('content-type') ?? '';
+  const raw = await res.text().catch(() => '');
+
+  if (!res.ok) {
+    let detail = raw;
+    if (detail && contentType.includes('application/json')) {
+      try {
+        detail = JSON.stringify(JSON.parse(raw));
+      } catch {
+        // ignore parse errors
+      }
+    }
+    const suffix = detail ? ` - ${detail}` : '';
+    throw new Error(`API Error: ${method} ${path} -> ${res.status} ${res.statusText}${suffix}`);
+  }
+
+  if (res.status === 204 || !raw) return undefined as unknown as T;
+  if (contentType.includes('application/json')) return JSON.parse(raw) as T;
+
+  try {
+    return JSON.parse(raw) as T;
+  } catch {
+    return raw as unknown as T;
+  }
 }
 
-function normalizeList<T>(data: T[] | { results?: T[] } | unknown): T[] {
-  return Array.isArray(data) ? data : [];
+function normalizeList<T>(data: unknown): T[] {
+  if (Array.isArray(data)) return data as T[];
+  if (data && typeof data === 'object') {
+    const maybeResults = (data as any).results;
+    if (Array.isArray(maybeResults)) return maybeResults as T[];
+  }
+  return [];
 }
 
 const mockStore = {
@@ -74,10 +104,30 @@ const nextId = {
 
 const nowIso = () => new Date().toISOString();
 
+function toStudentWritePayload(payload: Partial<StudentFormData>): Record<string, any> {
+  const out: Record<string, any> = {};
+  if ('name' in payload) out.name = payload.name;
+  if ('phone' in payload) out.phone = payload.phone;
+  if ('subject' in payload) out.subject = payload.subject;
+  if ('default_location' in payload) out.default_location = payload.default_location;
+  if ('fee' in payload) out.fee = payload.fee;
+  if ('memo' in payload) out.memo = payload.memo;
+  return out;
+}
+
+function toLessonWritePayload(payload: any): Record<string, any> {
+  const out: Record<string, any> = { ...(payload ?? {}) };
+  delete out.homework;
+  delete out.regular_day;
+  delete out.regular_time;
+  delete out.lesson_method;
+  return out;
+}
+
 // ===== Students =====
 export async function getStudents(): Promise<Student[]> {
   if (USE_MOCK) return [...mockStore.students];
-  const data = await request<Student[]>(ENDPOINTS.students);
+  const data = await request<unknown>(ENDPOINTS.students);
   return normalizeList<Student>(data);
 }
 
@@ -92,7 +142,8 @@ export async function createStudent(payload: StudentFormData): Promise<Student> 
     mockStore.students.push(created);
     return created;
   }
-  return request<Student>(ENDPOINTS.students, { method: 'POST', body: JSON.stringify(payload) });
+  const body = toStudentWritePayload(payload);
+  return request<Student>(ENDPOINTS.students, { method: 'POST', body: JSON.stringify(body) });
 }
 
 export async function updateStudent(id: number, payload: Partial<StudentFormData>): Promise<Student> {
@@ -103,7 +154,8 @@ export async function updateStudent(id: number, payload: Partial<StudentFormData
     mockStore.students[idx] = updated;
     return updated;
   }
-  return request<Student>(`${ENDPOINTS.students}${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+  const body = toStudentWritePayload(payload);
+  return request<Student>(`${ENDPOINTS.students}${id}/`, { method: 'PATCH', body: JSON.stringify(body) });
 }
 
 export async function deleteStudent(id: number): Promise<void> {
@@ -128,7 +180,7 @@ export async function getLessons(params?: { date?: string; student?: number; sta
   if (params?.student) query.set('student', String(params.student));
   if (params?.status) query.set('status', params.status);
   const q = query.toString();
-  const data = await request<Lesson[]>(`${ENDPOINTS.lessons}${q ? `?${q}` : ''}`);
+  const data = await request<unknown>(`${ENDPOINTS.lessons}${q ? `?${q}` : ''}`);
   return normalizeList<Lesson>(data);
 }
 
@@ -146,7 +198,7 @@ export async function createLesson(payload: LessonFormData): Promise<Lesson> {
   }
   
   // 프론트 필드명 -> 백엔드 필드명 매핑 (class_date, class_mode)
-  const backendPayload: any = { ...payload };
+  const backendPayload: any = toLessonWritePayload(payload);
   if ('lesson_date' in backendPayload) {
     backendPayload.class_date = backendPayload.lesson_date;
     delete backendPayload.lesson_date;
@@ -177,7 +229,7 @@ export async function updateLesson(id: number, payload: any): Promise<Lesson> {
   }
 
   // 프론트 필드명 -> 백엔드 필드명 매핑
-  const backendPayload: any = { ...payload };
+  const backendPayload: any = toLessonWritePayload(payload);
   if ('lesson_date' in backendPayload) {
     backendPayload.class_date = backendPayload.lesson_date;
     delete backendPayload.lesson_date;
@@ -214,7 +266,7 @@ export async function getTodos(params?: { due_date?: string; is_completed?: bool
   if (typeof params?.is_completed === 'boolean') query.set('is_completed', String(params.is_completed));
   if (params?.lesson) query.set('lesson', String(params.lesson));
   const q = query.toString();
-  const data = await request<Todo[]>(`${ENDPOINTS.todos}${q ? `?${q}` : ''}`);
+  const data = await request<unknown>(`${ENDPOINTS.todos}${q ? `?${q}` : ''}`);
   return normalizeList<Todo>(data);
 }
 
@@ -270,7 +322,7 @@ export async function getPayments(params?: { student?: number }): Promise<Paymen
   const query = new URLSearchParams();
   if (params?.student) query.set('student', String(params.student));
   const q = query.toString();
-  const data = await request<Payment[]>(`${ENDPOINTS.payments}${q ? `?${q}` : ''}`);
+  const data = await request<unknown>(`${ENDPOINTS.payments}${q ? `?${q}` : ''}`);
   return normalizeList<Payment>(data);
 }
 
@@ -297,7 +349,7 @@ export async function getCancelMakeups(params?: { student?: number; makeup_done?
   if (params?.student) query.set('student', String(params.student));
   if (typeof params?.makeup_done === 'boolean') query.set('makeup_done', String(params.makeup_done));
   const q = query.toString();
-  const data = await request<CancelMakeup[]>(`${ENDPOINTS.cancelMakeups}${q ? `?${q}` : ''}`);
+  const data = await request<unknown>(`${ENDPOINTS.cancelMakeups}${q ? `?${q}` : ''}`);
   return normalizeList<CancelMakeup>(data);
 }
 
@@ -332,7 +384,7 @@ export async function getBillingPolicies(studentId?: number): Promise<StudentBil
   const query = new URLSearchParams();
   if (studentId) query.set('student_id', String(studentId));
   const q = query.toString();
-  const data = await request<StudentBillingPolicy[]>(`${ENDPOINTS.billingPolicies}${q ? `?${q}` : ''}`);
+  const data = await request<unknown>(`${ENDPOINTS.billingPolicies}${q ? `?${q}` : ''}`);
   return normalizeList<StudentBillingPolicy>(data);
 }
 
@@ -353,7 +405,7 @@ export async function getRegularSchedules(studentId?: number): Promise<StudentRe
   const query = new URLSearchParams();
   if (studentId) query.set('student_id', String(studentId));
   const q = query.toString();
-  const data = await request<StudentRegularSchedule[]>(`${ENDPOINTS.regularSchedules}${q ? `?${q}` : ''}`);
+  const data = await request<unknown>(`${ENDPOINTS.regularSchedules}${q ? `?${q}` : ''}`);
   return normalizeList<StudentRegularSchedule>(data);
 }
 
@@ -375,7 +427,7 @@ export async function getPaymentRequests(params?: { student_id?: number; status?
   if (params?.student_id) query.set('student_id', String(params.student_id));
   if (params?.status) query.set('status', params.status);
   const q = query.toString();
-  const data = await request<PaymentRequest[]>(`${ENDPOINTS.paymentRequests}${q ? `?${q}` : ''}`);
+  const data = await request<unknown>(`${ENDPOINTS.paymentRequests}${q ? `?${q}` : ''}`);
   return normalizeList<PaymentRequest>(data);
 }
 

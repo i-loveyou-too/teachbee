@@ -43,9 +43,9 @@ export default function RegularScheduleModal({ open, onClose, studentId, schedul
     }
   };
 
-  const inputCls = 'w-full rounded-xl p-3 mb-3 text-[13px] border border-[#eee]';
+  const inputCls = 'w-full min-h-[44px] rounded-xl px-3 py-2.5 mb-2.5 text-[13px] leading-[1.4] border border-[#eee]';
   const inputStyle = { background: '#f7f8fa', outline: 'none' };
-  const labelCls = 'block text-[12px] mb-1';
+  const labelCls = 'block text-[12px] mb-1 leading-[1.35]';
   const labelStyle = { color: '#888' };
 
   return (
@@ -64,24 +64,29 @@ export default function RegularScheduleModal({ open, onClose, studentId, schedul
           ))}
         </select>
 
-        <label className={labelCls} style={labelStyle}>시작 시간 *</label>
-        <input
-          name="start_time"
-          type="time"
-          required
-          defaultValue={schedule?.start_time ?? ''}
-          className={inputCls}
-          style={inputStyle}
-        />
-
-        <label className={labelCls} style={labelStyle}>종료 시간</label>
-        <input
-          name="end_time"
-          type="time"
-          defaultValue={schedule?.end_time ?? ''}
-          className={inputCls}
-          style={inputStyle}
-        />
+        <div className="mb-2.5 grid grid-cols-2 gap-2.5">
+          <div>
+            <label className={labelCls} style={labelStyle}>시작 시간 *</label>
+            <input
+              name="start_time"
+              type="time"
+              required
+              defaultValue={schedule?.start_time ?? ''}
+              className={`${inputCls} mb-0`}
+              style={inputStyle}
+            />
+          </div>
+          <div>
+            <label className={labelCls} style={labelStyle}>종료 시간</label>
+            <input
+              name="end_time"
+              type="time"
+              defaultValue={schedule?.end_time ?? ''}
+              className={`${inputCls} mb-0`}
+              style={inputStyle}
+            />
+          </div>
+        </div>
 
         <label className={labelCls} style={labelStyle}>장소</label>
         <input
@@ -91,32 +96,34 @@ export default function RegularScheduleModal({ open, onClose, studentId, schedul
           style={inputStyle}
         />
 
-        <label className={labelCls} style={labelStyle}>
+        <label className="mb-2.5 flex items-center gap-2 text-[12px] leading-[1.35]" style={{ color: '#666' }}>
           <input
             name="is_active"
             type="checkbox"
             defaultChecked={schedule?.is_active ?? true}
-            style={{ marginRight: 6 }}
+            style={{ width: 15, height: 15, margin: 0, accentColor: '#8FDCCF' }}
           />
           활성화
         </label>
 
-        <button
-          type="submit"
-          disabled={saving}
-          className="w-full py-3 rounded-xl text-[14px] font-semibold text-white"
-          style={{ background: '#8FDCCF', opacity: saving ? 0.7 : 1 }}
-        >
-          {saving ? '저장 중...' : '저장하기'}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          className="w-full mt-2 py-2.5 rounded-xl text-[13px]"
-          style={{ background: '#f7f8fa', color: '#888' }}
-        >
-          취소
-        </button>
+        <div className="mt-3 grid grid-cols-2 gap-2">
+          <button
+            type="submit"
+            disabled={saving}
+            className="h-11 w-full rounded-xl text-[14px] font-semibold text-white"
+            style={{ background: '#8FDCCF', opacity: saving ? 0.7 : 1 }}
+          >
+            {saving ? '저장 중...' : '저장하기'}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-11 w-full rounded-xl text-[14px] font-semibold"
+            style={{ background: '#f7f8fa', color: '#888' }}
+          >
+            취소
+          </button>
+        </div>
       </form>
     </Modal>
   );

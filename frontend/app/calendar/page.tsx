@@ -82,7 +82,10 @@ function LessonDetailModal({
       const updated = await updateLesson(lesson.id, data);
       setLesson(updated);
       onRefresh?.();
-    } catch (err) { console.error(err); }
+    } catch (err) {
+      console.error('Failed to update lesson:', err);
+      alert('저장에 실패했습니다.');
+    }
   };
 
   const handleAddTodo = async () => {
@@ -99,8 +102,13 @@ function LessonDetailModal({
   };
 
   const handleToggleTodo = async (id: number, done: boolean) => {
-    const updated = await updateTodo(id, { done });
-    setTasks(prev => prev.map(t => (t.id === id ? updated : t)));
+    try {
+      const updated = await updateTodo(id, { done });
+      setTasks(prev => prev.map(t => (t.id === id ? updated : t)));
+    } catch (err) {
+      console.error('Failed to update todo:', err);
+      alert('저장에 실패했습니다.');
+    }
   };
 
   const s = STATUS_STYLE[lesson.status] ?? STATUS_STYLE['예정'];

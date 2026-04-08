@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import Modal from '@/components/common/Modal';
 import BrandLogo from '@/components/common/BrandLogo';
 
@@ -51,10 +51,12 @@ function SettingsModal({ onClose }: { onClose: () => void }) {
 // ── 헤더 메인 ─────────────────────────────────────────────────────────────
 interface AppHeaderProps {
   greeting?: string;
+  rightActions?: ReactNode;
 }
 
 export default function AppHeader({
   greeting = '오늘도 좋은 수업 되세요 ☀️',
+  rightActions,
 }: AppHeaderProps) {
   const [notiOpen, setNotiOpen] = useState(false);
   const [settOpen, setSettOpen] = useState(false);
@@ -75,6 +77,7 @@ export default function AppHeader({
           <div style={{ fontSize: 12, color: '#888' }}>{greeting}</div>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
+          {rightActions}
           {/* 알림 버튼 */}
           <button
             onClick={() => setNotiOpen(true)}

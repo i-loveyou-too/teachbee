@@ -110,24 +110,53 @@ export default function LessonFormSheet({ open, onClose, lesson, onSuccess }: Le
   };
 
   const isEdit = !!lesson;
+  const fieldStyle: React.CSSProperties = {
+    width: '100%',
+    minHeight: 44,
+    borderRadius: 12,
+    padding: '10px 12px',
+    border: '1px solid #eee',
+    background: '#f7f8fa',
+    fontSize: 13,
+    lineHeight: 1.4,
+    fontFamily: 'inherit',
+    boxSizing: 'border-box',
+  };
+  const labelStyle: React.CSSProperties = {
+    fontSize: 12,
+    color: '#888',
+    display: 'block',
+    marginBottom: 4,
+    lineHeight: 1.35,
+    fontFamily: 'inherit',
+  };
+  const actionButtonStyle: React.CSSProperties = {
+    minHeight: 46,
+    borderRadius: 12,
+    fontSize: 14,
+    fontWeight: 600,
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
+  };
 
   return (
     <Modal open={open} onClose={onClose} title={isEdit ? '수업 수정' : '수업 추가'}>
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {error && (
-          <div style={{ padding: 12, borderRadius: 8, background: '#ffeaea', color: '#d94a4a', fontSize: 12, fontWeight: 500 }}>
+          <div style={{ padding: 10, borderRadius: 10, background: '#ffeaea', color: '#d94a4a', fontSize: 12, fontWeight: 500 }}>
             {error}
           </div>
         )}
 
         {/* Student */}
         <div>
-          <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>학생 *</label>
+          <label style={labelStyle}>학생 *</label>
           <select
             value={student || ''}
             onChange={(e) => setStudent(Number(e.target.value) || null)}
             required
-            style={{ width: '100%', borderRadius: 8, padding: 10, border: '1px solid #eee', fontSize: 13, fontFamily: 'inherit' }}
+            style={fieldStyle}
           >
             <option value="">선택</option>
             {students.map((s) => (
@@ -140,118 +169,112 @@ export default function LessonFormSheet({ open, onClose, lesson, onSuccess }: Le
 
         {/* Date */}
         <div>
-          <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>날짜 *</label>
+          <label style={labelStyle}>날짜 *</label>
           <input
             type="date"
             value={lessonDate}
             onChange={(e) => setLessonDate(e.target.value)}
             required
-            style={{ width: '100%', borderRadius: 8, padding: 10, border: '1px solid #eee', fontSize: 13, fontFamily: 'inherit' }}
+            style={fieldStyle}
           />
         </div>
 
         {/* Time */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           <div>
-            <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>시작 시간 *</label>
+            <label style={labelStyle}>시작 시간 *</label>
             <input
               type="time"
               value={startTime}
               onChange={(e) => setStartTime(e.target.value)}
               required
-              style={{ width: '100%', borderRadius: 8, padding: 10, border: '1px solid #eee', fontSize: 13, fontFamily: 'inherit' }}
+              style={fieldStyle}
             />
           </div>
           <div>
-            <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>종료 시간</label>
+            <label style={labelStyle}>종료 시간</label>
             <input
               type="time"
               value={endTime}
               onChange={(e) => setEndTime(e.target.value)}
               required
-              style={{ width: '100%', borderRadius: 8, padding: 10, border: '1px solid #eee', fontSize: 13, fontFamily: 'inherit' }}
+              style={fieldStyle}
             />
           </div>
         </div>
 
         {/* Subject */}
         <div>
-          <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>과목 *</label>
+          <label style={labelStyle}>과목 *</label>
           <input
             type="text"
             value={subject}
             onChange={(e) => setSubject(e.target.value)}
             placeholder="영어, 수학, 국어 등"
             required
-            style={{ width: '100%', borderRadius: 8, padding: 10, border: '1px solid #eee', fontSize: 13, fontFamily: 'inherit' }}
+            style={fieldStyle}
           />
         </div>
 
         {/* Location */}
         <div>
-          <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>장소</label>
+          <label style={labelStyle}>장소</label>
           <input
             type="text"
             value={location}
             onChange={(e) => setLocation(e.target.value)}
             placeholder="강남 카페, 온라인 등"
-            style={{ width: '100%', borderRadius: 8, padding: 10, border: '1px solid #eee', fontSize: 13, fontFamily: 'inherit' }}
+            style={fieldStyle}
           />
         </div>
 
-        {/* Method */}
-        <div>
-          <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>수업 방식</label>
-          <select
-            value={method}
-            onChange={(e) => setMethod(e.target.value as 'offline' | 'online')}
-            style={{ width: '100%', borderRadius: 8, padding: 10, border: '1px solid #eee', fontSize: 13, fontFamily: 'inherit' }}
-          >
-            <option value="offline">대면</option>
-            <option value="online">온라인</option>
-          </select>
-        </div>
-
-        {/* Status */}
-        <div>
-          <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>상태</label>
-          <select
-            value={status}
-            onChange={(e) => setStatus(e.target.value as '예정' | '완료' | '결석' | '보강')}
-            style={{ width: '100%', borderRadius: 8, padding: 10, border: '1px solid #eee', fontSize: 13, fontFamily: 'inherit' }}
-          >
-            <option value="예정">예정</option>
-            <option value="완료">완료</option>
-            <option value="결석">결석</option>
-            <option value="보강">보강</option>
-          </select>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          <div>
+            <label style={labelStyle}>수업 방식</label>
+            <select
+              value={method}
+              onChange={(e) => setMethod(e.target.value as 'offline' | 'online')}
+              style={fieldStyle}
+            >
+              <option value="offline">대면</option>
+              <option value="online">온라인</option>
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>상태</label>
+            <select
+              value={status}
+              onChange={(e) => setStatus(e.target.value as '예정' | '완료' | '결석' | '보강')}
+              style={fieldStyle}
+            >
+              <option value="예정">예정</option>
+              <option value="완료">완료</option>
+              <option value="결석">결석</option>
+              <option value="보강">보강</option>
+            </select>
+          </div>
         </div>
 
         {/* Memo */}
         <div>
-          <label style={{ fontSize: 12, color: '#888', display: 'block', marginBottom: 4 }}>메모</label>
+          <label style={labelStyle}>메모</label>
           <textarea
             value={memo}
             onChange={(e) => setMemo(e.target.value)}
             placeholder="특이사항을 메모하세요"
-            style={{ width: '100%', borderRadius: 8, padding: 10, border: '1px solid #eee', fontSize: 13, fontFamily: 'inherit', minHeight: 60, resize: 'none' }}
+            style={{ ...fieldStyle, minHeight: 68, resize: 'none' }}
           />
         </div>
 
         {/* Buttons */}
-        <div style={{ display: 'flex', gap: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginTop: 2 }}>
           <button
             type="submit"
             disabled={loading}
             style={{
-              flex: 1,
-              padding: '12px 0',
-              borderRadius: 12,
+              ...actionButtonStyle,
               background: loading ? '#ccc' : '#8FDCCF',
               color: '#fff',
-              fontSize: 13,
-              fontWeight: 600,
-              border: 'none',
               cursor: loading ? 'not-allowed' : 'pointer',
             }}
           >
@@ -261,15 +284,9 @@ export default function LessonFormSheet({ open, onClose, lesson, onSuccess }: Le
             type="button"
             onClick={onClose}
             style={{
-              padding: '12px 0',
-              borderRadius: 12,
+              ...actionButtonStyle,
               background: '#f7f8fa',
               color: '#888',
-              fontSize: 13,
-              fontWeight: 600,
-              border: 'none',
-              cursor: 'pointer',
-              minWidth: 80,
             }}
           >
             취소

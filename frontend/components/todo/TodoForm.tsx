@@ -44,14 +44,26 @@ export default function TodoForm({ open, onClose, onSave, defaultDate }: TodoFor
   const inputStyle: React.CSSProperties = {
     width: '100%',
     borderRadius: 12,
-    padding: '11px 13px',
-    marginBottom: 10,
+    minHeight: 44,
+    padding: '10px 12px',
+    marginBottom: 8,
     border: '1px solid #eee',
     background: '#f7f8fa',
     fontSize: 13,
     fontWeight: 500,
+    lineHeight: 1.4,
     outline: 'none',
+    fontFamily: 'inherit',
     boxSizing: 'border-box',
+  };
+  const actionButtonStyle: React.CSSProperties = {
+    minHeight: 46,
+    borderRadius: 12,
+    fontSize: 14,
+    fontWeight: 600,
+    border: 'none',
+    cursor: 'pointer',
+    fontFamily: 'inherit',
   };
 
   return (
@@ -66,7 +78,7 @@ export default function TodoForm({ open, onClose, onSave, defaultDate }: TodoFor
         />
 
         {/* 빠른 날짜 선택 */}
-        <div style={{ display: 'flex', gap: 6, marginBottom: 12 }}>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginBottom: 10 }}>
           {QUICK_DATES.map(q => {
             const val = q.getValue();
             const active = selectedDate === val;
@@ -98,32 +110,34 @@ export default function TodoForm({ open, onClose, onSave, defaultDate }: TodoFor
           type="date"
           value={selectedDate}
           onChange={e => setSelectedDate(e.target.value)}
-          style={{ ...inputStyle, marginBottom: 16 }}
+          style={{ ...inputStyle, marginBottom: 0 }}
         />
 
-        <button
-          type="submit"
-          disabled={saving}
-          style={{
-            width: '100%', padding: '13px 0', borderRadius: 12,
-            background: '#8FDCCF', color: '#fff',
-            fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer',
-            opacity: saving ? 0.7 : 1,
-          }}
-        >
-          {saving ? '저장 중...' : '추가'}
-        </button>
-        <button
-          type="button"
-          onClick={onClose}
-          style={{
-            width: '100%', marginTop: 8, padding: '10px 0', borderRadius: 12,
-            background: '#f7f8fa', color: '#888',
-            fontSize: 13, border: 'none', cursor: 'pointer',
-          }}
-        >
-          취소
-        </button>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))', gap: 8, marginTop: 12 }}>
+          <button
+            type="submit"
+            disabled={saving}
+            style={{
+              ...actionButtonStyle,
+              background: '#8FDCCF',
+              color: '#fff',
+              opacity: saving ? 0.7 : 1,
+            }}
+          >
+            {saving ? '저장 중...' : '추가'}
+          </button>
+          <button
+            type="button"
+            onClick={onClose}
+            style={{
+              ...actionButtonStyle,
+              background: '#f7f8fa',
+              color: '#888',
+            }}
+          >
+            취소
+          </button>
+        </div>
       </form>
     </Modal>
   );
