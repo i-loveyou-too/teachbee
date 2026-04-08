@@ -6,14 +6,23 @@ class LessonSerializer(serializers.ModelSerializer):
     lesson_date = serializers.CharField(source='class_date', required=False)
     method = serializers.CharField(source='class_mode', required=False)
     prep_done = serializers.BooleanField(source='prep_checked', required=False)
-    homework = serializers.SerializerMethodField()
+    homework = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    regular_day = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    regular_time = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    lesson_method = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+
+    # 상태 매핑
+    STATUS_MAPPING_TO_DB = {
+        '예정': 'scheduled',
+        '완료': 'completed',
+        '결석': 'cancelled',
+        '보강': 'makeup_scheduled',
+    }
+    STATUS_MAPPING_TO_FRONT = {v: k for k, v in STATUS_MAPPING_TO_DB.items()}
 
     class Meta:
         model = Lesson
         fields = '__all__'
-
-    def get_homework(self, obj):
-        return ''
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)
@@ -24,6 +33,9 @@ class LessonSerializer(serializers.ModelSerializer):
             ret['method'] = ret.pop('class_mode')
         if 'prep_checked' in ret:
             ret['prep_done'] = ret.pop('prep_checked')
+        # 상태값을 영어에서 한글로 변환
+        if 'status' in ret:
+            ret['status'] = self.STATUS_MAPPING_TO_FRONT.get(ret['status'], ret['status'])
         return ret
 
     def to_internal_value(self, data):
@@ -32,11 +44,13 @@ class LessonSerializer(serializers.ModelSerializer):
             data['class_date'] = data.pop('lesson_date')
         if 'method' in data:
             data['class_mode'] = data.pop('method')
+            if 'lesson_method' not in data:
+                data['lesson_method'] = data['class_mode']
         if 'prep_done' in data:
             data['prep_checked'] = data.pop('prep_done')
-        # homework 필드는 무시 (DB에 없음)
-        if 'homework' in data:
-            data.pop('homework', None)
+        # 상태값을 한글에서 영어로 변환
+        if 'status' in data:
+            data['status'] = self.STATUS_MAPPING_TO_DB.get(data['status'], data['status'])
         return super().to_internal_value(data)
 
 

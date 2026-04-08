@@ -9,7 +9,7 @@ import type { Payment } from '@/lib/types';
 import { ChevronRight } from 'lucide-react';
 
 // 상태 라벨 매핑 함수
-const paymentStatusLabelMap = {
+const paymentStatusLabelMap: Record<string, string> = {
   paid: "입금완료",
   unpaid: "미납",
   pending: "입금대기",
@@ -18,7 +18,7 @@ const paymentStatusLabelMap = {
   overdue: "연체",
 };
 
-const getPaymentStatusLabel = (status: string | undefined) =>
+const getPaymentStatusLabel = (status: string | undefined): string =>
   paymentStatusLabelMap[String(status ?? "").toLowerCase()] ?? "상태미정";
 
 export default function BillingPage() {
@@ -46,7 +46,7 @@ export default function BillingPage() {
 
   const handleConfirm = async (id: number) => {
     try {
-      const updated = await updatePayment(id, { status: 'paid' });
+      const updated = await updatePayment(id, { status: '입금완료' as any });
       setPayments(prev => prev.map(p => (p.id === id ? updated : p)));
     } catch (error) {
       console.error('Failed to confirm payment:', error);

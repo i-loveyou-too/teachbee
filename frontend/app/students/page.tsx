@@ -5,7 +5,7 @@ import { Search } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import AppHeader from '@/components/layout/AppHeader';
 import Modal from '@/components/common/Modal';
-import { getCancelMakeups, getLessons, getStudents } from '@/lib/api';
+import { getCancelMakeups, getLessons, getStudents, createStudent, updateStudent, deleteStudent } from '@/lib/api';
 import { PAYMENT_BADGE } from '@/lib/constants';
 import type { CancelMakeup, Lesson, PaymentStatus, Student, StudentFormData } from '@/lib/types';
 

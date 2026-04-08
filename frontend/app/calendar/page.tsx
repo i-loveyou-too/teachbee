@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import AppHeader from '@/components/layout/AppHeader';
 import Modal from '@/components/common/Modal';
+import LessonFormSheet from '@/components/lessons/LessonFormSheet';
 import { getLessons, getStudents, getTodos, updateLesson, createTodo, updateTodo } from '@/lib/api';
 import type { Lesson, Student, StudentColorKey, Todo } from '@/lib/types';
 import { KO_DAYS, DEFAULT_STUDENT_COLOR_KEY, STUDENT_COLOR_BY_ID, getStudentPalette } from '@/lib/constants';
@@ -35,10 +36,10 @@ function buildMonth(baseDate: Date): Date[][] {
 }
 
 const STATUS_STYLE: Record<string, { bg: string; color: string; label: string }> = {
-  completed: { bg: '#e8faf0', color: '#2ba862', label: '완료' },
-  cancelled: { bg: '#ffeaea', color: '#d94a4a', label: '결석' },
-  makeup_scheduled: { bg: '#e8f4fd', color: '#3a8fd4', label: '보강' },
-  scheduled: { bg: '#f0f0f0', color: '#888', label: '예정' },
+  '완료': { bg: '#e8faf0', color: '#2ba862', label: '완료' },
+  '결석': { bg: '#ffeaea', color: '#d94a4a', label: '결석' },
+  '보강': { bg: '#e8f4fd', color: '#3a8fd4', label: '보강' },
+  '예정': { bg: '#f0f0f0', color: '#888', label: '예정' },
 };
 
 const MAX_DOTS = 4;
@@ -50,11 +51,13 @@ function LessonDetailModal({
   date,
   onClose,
   onRefresh,
+  onEdit,
 }: {
   lesson: Lesson | null;
   date: string;
   onClose: () => void;
   onRefresh?: () => void;
+  onEdit?: (lesson: Lesson) => void;
 }) {
   const [lesson, setLesson] = useState<Lesson | null>(initialLesson);
   const [memo, setMemo] = useState(initialLesson?.memo || '');
@@ -100,7 +103,7 @@ function LessonDetailModal({
     setTasks(prev => prev.map(t => (t.id === id ? updated : t)));
   };
 
-  const s = STATUS_STYLE[lesson.status] ?? STATUS_STYLE['scheduled'];
+  const s = STATUS_STYLE[lesson.status] ?? STATUS_STYLE['예정'];
 
   return (
     <Modal open onClose={onClose}>
@@ -193,77 +196,50 @@ function LessonDetailModal({
       </div>
 
       <div style={{ display: 'flex', gap: 8 }}>
-        {lesson.status === '????' && (
+        {lesson.status === '예정' && (
           <>
-            <button style={{ flex: 1, padding: '10px 0', borderRadius: 12, background: '#8FDCCF', color: '#fff', fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer' }}>
-              ???? ????
+            <button
+              onClick={() => handlePatch({ status: '완료' })}
+              style={{ flex: 1, padding: '10px 0', borderRadius: 12, background: '#8FDCCF', color: '#fff', fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer' }}
+            >
+              수업 완료
             </button>
-            <button style={{ padding: '10px 16px', borderRadius: 12, background: '#ffeaea', color: '#d94a4a', fontSize: 13, border: 'none', cursor: 'pointer' }}>
-              ?????
+            <button
+              onClick={() => handlePatch({ status: '결석' })}
+              style={{ padding: '10px 16px', borderRadius: 12, background: '#ffeaea', color: '#d94a4a', fontSize: 13, border: 'none', cursor: 'pointer' }}
+            >
+              결석
             </button>
           </>
         )}
-        <button style={{ padding: '10px 16px', borderRadius: 12, background: '#f7f8fa', color: '#888', fontSize: 13, border: 'none', cursor: 'pointer' }}>
-          ????
+        <button
+          onClick={() => {
+            if (lesson) {
+              onEdit?.(lesson);
+              onClose();
+            }
+          }}
+          style={{ padding: '10px 16px', borderRadius: 12, background: '#e8f4fd', color: '#3a8fd4', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+        >
+          수정
         </button>
       </div>
       <button onClick={onClose} style={{ width: '100%', marginTop: 8, padding: '10px 0', borderRadius: 12, background: '#f7f8fa', color: '#888', fontSize: 13, border: 'none', cursor: 'pointer' }}>
-        ????
+        닫기
       </button>
     </Modal>
   );
 }
 
-function AddLessonModal({ date, onClose }: { date: string; onClose: () => void }) {
-  return (
-    <Modal open onClose={onClose} title="수업 추가">
-      <div style={{ fontSize: 12, color: '#888', marginBottom: 16 }}>
-        날짜: {date}
-      </div>
-      <select
-        style={{ width: '100%', borderRadius: 12, padding: 12, marginBottom: 12, border: '1px solid #eee', background: '#f7f8fa', fontSize: 13 }}
-      >
-        <option value="">학생 선택</option>
-        <option>김지민</option>
-        <option>이수진</option>
-        <option>박민준</option>
-      </select>
-      <input
-        type="time"
-        defaultValue="15:00"
-        style={{ width: '100%', borderRadius: 12, padding: 12, marginBottom: 12, border: '1px solid #eee', background: '#f7f8fa', fontSize: 13 }}
-      />
-      <input
-        placeholder="과목"
-        style={{ width: '100%', borderRadius: 12, padding: 12, marginBottom: 12, border: '1px solid #eee', background: '#f7f8fa', fontSize: 13 }}
-      />
-      <input
-        placeholder="장소"
-        style={{ width: '100%', borderRadius: 12, padding: 12, marginBottom: 16, border: '1px solid #eee', background: '#f7f8fa', fontSize: 13 }}
-      />
-      <button
-        onClick={onClose}
-        style={{ width: '100%', padding: '14px 0', borderRadius: 12, background: '#8FDCCF', color: '#fff', fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer' }}
-      >
-        추가하기
-      </button>
-      <button
-        onClick={onClose}
-        style={{ width: '100%', marginTop: 8, padding: '10px 0', borderRadius: 12, background: '#f7f8fa', color: '#888', fontSize: 13, border: 'none', cursor: 'pointer' }}
-      >
-        취소
-      </button>
-    </Modal>
-  );
-}
 
 export default function CalendarPage() {
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
   const [viewDate, setViewDate] = useState(new Date());
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
-  const [addOpen, setAddOpen] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
+  const [lessonFormOpen, setLessonFormOpen] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
 
   const weeks = useMemo(() => buildMonth(viewDate), [viewDate]);
 
@@ -568,7 +544,10 @@ export default function CalendarPage() {
               </div>
             </div>
             <button
-              onClick={() => setAddOpen(true)}
+              onClick={() => {
+                setEditingLesson(null);
+                setLessonFormOpen(true);
+              }}
               style={{
                 padding: '8px 14px',
                 borderRadius: 999,
@@ -607,11 +586,32 @@ export default function CalendarPage() {
         </div>
       </div>
 
-      {addOpen && <AddLessonModal date={selectedDate} onClose={() => setAddOpen(false)} />}
       <LessonDetailModal
         lesson={selectedLesson}
         date={selectedDate}
         onClose={() => setSelectedLesson(null)}
+        onEdit={(lesson) => {
+          setEditingLesson(lesson);
+          setLessonFormOpen(true);
+        }}
+      />
+
+      <LessonFormSheet
+        open={lessonFormOpen}
+        lesson={editingLesson}
+        onClose={() => {
+          setLessonFormOpen(false);
+          setEditingLesson(null);
+        }}
+        onSuccess={() => {
+          setSelectedLesson(null);
+          Promise.all([getLessons(), getStudents()])
+            .then(([lessonsData, studentsData]) => {
+              setLessons(lessonsData);
+              setStudents(studentsData);
+            })
+            .catch(() => {});
+        }}
       />
     </AppShell>
   );

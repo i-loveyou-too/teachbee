@@ -5,6 +5,7 @@ import { Check, ChevronRight, MoreHorizontal, Plus } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import AppHeader from '@/components/layout/AppHeader';
 import Modal from '@/components/common/Modal';
+import LessonFormSheet from '@/components/lessons/LessonFormSheet';
 import { getHomeDashboard, getLessons, updateTodo, updateLesson, getTodos, createTodo } from '@/lib/api';
 import type { DashboardSummary, Lesson, Todo } from '@/lib/types';
 import { DEFAULT_STUDENT_COLOR_KEY, STUDENT_COLOR_BY_ID, getStudentPalette } from '@/lib/constants';
@@ -66,11 +67,13 @@ function LessonDetailModal({
   date,
   onClose,
   onRefresh,
+  onEdit,
 }: {
   lesson: Lesson | null;
   date: string;
   onClose: () => void;
   onRefresh?: () => void;
+  onEdit?: (lesson: Lesson) => void;
 }) {
   const [lesson, setLesson] = useState<Lesson | null>(initialLesson);
   const [memo, setMemo] = useState(initialLesson?.memo || '');
@@ -122,12 +125,12 @@ function LessonDetailModal({
   };
 
   const statusInfo: Record<string, { bg: string; color: string; label: string }> = {
-    completed: { bg: '#e8faf0', color: '#2ba862', label: '완료' },
-    cancelled: { bg: '#ffeaea', color: '#d94a4a', label: '결석' },
-    scheduled: { bg: '#f0f0f0', color: '#888', label: '예정' },
-    makeup_scheduled: { bg: '#e8f4fd', color: '#3a8fd4', label: '보강' },
+    '완료': { bg: '#e8faf0', color: '#2ba862', label: '완료' },
+    '결석': { bg: '#ffeaea', color: '#d94a4a', label: '결석' },
+    '예정': { bg: '#f0f0f0', color: '#888', label: '예정' },
+    '보강': { bg: '#e8f4fd', color: '#3a8fd4', label: '보강' },
   };
-  const s = statusInfo[lesson.status] ?? statusInfo['scheduled'];
+  const s = statusInfo[lesson.status] ?? statusInfo['예정'];
 
   return (
     <Modal open onClose={onClose}>
@@ -147,8 +150,8 @@ function LessonDetailModal({
         {[
           { label: '과목', value: lesson.subject || '-' },
           { label: '장소', value: lesson.location || '-' },
-          { label: '방식', value: lesson.class_mode === 'offline' ? '대면' : '온라인' },
-          { label: '정산', value: lesson.payment_status || '-' },
+          { label: '방식', value: lesson.method === '대면' ? '대면' : '온라인' },
+          { label: '메모', value: lesson.memo || '-' },
         ].map(({ label, value }) => (
           <div key={label} className="glass-card" style={{ padding: 12, borderRadius: 16 }}>
             <div style={{ fontSize: 11, color: '#9aa', marginBottom: 4 }}>{label}</div>
@@ -159,15 +162,15 @@ function LessonDetailModal({
 
       {/* 체크 섹션 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
-        <LessonCheckRow 
-          label="수업 자료 준비" 
-          checked={!!lesson.prep_checked} 
-          onToggle={() => handlePatch({ prep_checked: !lesson.prep_checked })} 
+        <LessonCheckRow
+          label="수업 자료 준비"
+          checked={!!lesson.prep_done}
+          onToggle={() => handlePatch({ prep_done: !lesson.prep_done })}
         />
-        <LessonCheckRow 
-          label="숙제 검사" 
-          checked={!!lesson.homework_checked} 
-          onToggle={() => handlePatch({ homework_checked: !lesson.homework_checked })} 
+        <LessonCheckRow
+          label="숙제 검사"
+          checked={!!lesson.homework_checked}
+          onToggle={() => handlePatch({ homework_checked: !lesson.homework_checked })}
         />
       </div>
 
@@ -189,8 +192,8 @@ function LessonDetailModal({
         <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 12 }}>
           {tasks.map(t => (
             <div key={t.id} style={{ fontSize: 13, color: '#444', display: 'flex', alignItems: 'center', gap: 8, padding: '4px 8px' }}>
-              <div style={{ width: 6, height: 6, borderRadius: '50%', background: t.is_completed ? '#ccc' : '#8FDCCF' }} />
-              <span style={{ textDecoration: t.is_completed ? 'line-through' : 'none', opacity: t.is_completed ? 0.5 : 1 }}>{t.text}</span>
+              <div style={{ width: 6, height: 6, borderRadius: '50%', background: t.done ? '#ccc' : '#8FDCCF' }} />
+              <span style={{ textDecoration: t.done ? 'line-through' : 'none', opacity: t.done ? 0.5 : 1 }}>{t.text}</span>
             </div>
           ))}
         </div>
@@ -207,40 +210,61 @@ function LessonDetailModal({
 
       {/* 하단 액션 */}
       <div style={{ display: 'flex', gap: 8 }}>
-        <button 
-          onClick={() => handlePatch({ status: 'completed' })}
+        <button
+          onClick={() => handlePatch({ status: '완료' })}
           style={{ flex: 1, padding: '14px 0', borderRadius: 18, background: '#8FDCCF', color: '#fff', fontSize: 14, fontWeight: 800, border: 'none', cursor: 'pointer' }}
         >
           수업 완료
         </button>
-        <button 
-          onClick={() => handlePatch({ status: 'cancelled' })}
+        <button
+          onClick={() => handlePatch({ status: '결석' })}
           style={{ padding: '14px 20px', borderRadius: 18, background: '#ffeaea', color: '#d94a4a', fontSize: 14, fontWeight: 800, border: 'none', cursor: 'pointer' }}
         >
           결석
         </button>
       </div>
-      <button onClick={onClose} style={{ width: '100%', marginTop: 8, padding: '10px 0', borderRadius: 12, background: '#f7f8fa', color: '#888', fontSize: 13, border: 'none', cursor: 'pointer' }}>
-        닫기
-      </button>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
+        <button
+          onClick={() => {
+            if (lesson) {
+              onEdit?.(lesson);
+              onClose();
+            }
+          }}
+          style={{ flex: 1, padding: '10px 0', borderRadius: 12, background: '#e8f4fd', color: '#3a8fd4', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer' }}
+        >
+          수정
+        </button>
+        <button onClick={onClose} style={{ flex: 1, padding: '10px 0', borderRadius: 12, background: '#f7f8fa', color: '#888', fontSize: 13, border: 'none', cursor: 'pointer' }}>
+          닫기
+        </button>
+      </div>
     </Modal>
   );
 }
 
-function AddMenuModal({ onClose }: { onClose: () => void }) {
+function AddMenuModal({ onClose, onAddLesson }: { onClose: () => void; onAddLesson: () => void }) {
   const items = [
-    { icon: '+', label: '수업 추가', bg: '#EEF9F6' },
-    { icon: '+', label: '학생 추가', bg: '#fff8e1' },
-    { icon: '+', label: '할 일 추가', bg: '#e8f4fd' },
-    { icon: '+', label: '보강 등록', bg: '#ffeaea' },
+    { icon: '+', label: '수업 추가', bg: '#EEF9F6', action: 'addLesson' },
+    { icon: '+', label: '학생 추가', bg: '#fff8e1', action: 'addStudent' },
+    { icon: '+', label: '할 일 추가', bg: '#e8f4fd', action: 'addTodo' },
+    { icon: '+', label: '보강 등록', bg: '#ffeaea', action: 'addMakeup' },
   ];
+
+  const handleItemClick = (action: string) => {
+    if (action === 'addLesson') {
+      onAddLesson();
+    }
+    onClose();
+  };
+
   return (
     <Modal open onClose={onClose} title="추가하기">
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
-        {items.map(({ icon, label, bg }) => (
+        {items.map(({ icon, label, bg, action }) => (
           <button
             key={label}
-            onClick={onClose}
+            onClick={() => handleItemClick(action)}
             style={{
               borderRadius: 20,
               padding: 16,
@@ -274,6 +298,8 @@ export default function HomePage() {
   const [lessons, setLessons] = useState<Lesson[]>([]);
   const [selectedLesson, setSelectedLesson] = useState<Lesson | null>(null);
   const [addMenuOpen, setAddMenuOpen] = useState(false);
+  const [lessonFormOpen, setLessonFormOpen] = useState(false);
+  const [editingLesson, setEditingLesson] = useState<Lesson | null>(null);
   const [selectedDate, setSelectedDate] = useState(TODAY_STR);
 
   const oneWeek = useMemo(() => buildOneWeek(), []);
@@ -337,11 +363,11 @@ export default function HomePage() {
 
   const selectedBadge = selectedDate === TODAY_STR ? '오늘' : null;
 
-  const lessonStatusStyle: Record<string, { bg: string; color: string }> = {
-    완료: { bg: '#e8faf0', color: '#2ba862' },
-    결석: { bg: '#ffeaea', color: '#d94a4a' },
-    보강: { bg: '#e8f4fd', color: '#3a8fd4' },
-    예정: { bg: '#f0f0f0', color: '#888' },
+  const lessonStatusStyle: Record<string, { bg: string; color: string; label: string }> = {
+    완료: { bg: '#e8faf0', color: '#2ba862', label: '완료' },
+    결석: { bg: '#ffeaea', color: '#d94a4a', label: '결석' },
+    보강: { bg: '#e8f4fd', color: '#3a8fd4', label: '보강' },
+    예정: { bg: '#f0f0f0', color: '#888', label: '예정' },
   };
 
   const LessonCard = ({ lesson }: { lesson: Lesson }) => {
@@ -702,9 +728,34 @@ export default function HomePage() {
         date={selectedDate}
         onClose={() => setSelectedLesson(null)}
         onRefresh={loadData}
+        onEdit={(lesson) => {
+          setEditingLesson(lesson);
+          setLessonFormOpen(true);
+        }}
       />
 
-      {addMenuOpen && <AddMenuModal onClose={() => setAddMenuOpen(false)} />}
+      <LessonFormSheet
+        open={lessonFormOpen}
+        lesson={editingLesson}
+        onClose={() => {
+          setLessonFormOpen(false);
+          setEditingLesson(null);
+        }}
+        onSuccess={() => {
+          setSelectedLesson(null);
+          loadData();
+        }}
+      />
+
+      {addMenuOpen && (
+        <AddMenuModal
+          onClose={() => setAddMenuOpen(false)}
+          onAddLesson={() => {
+            setEditingLesson(null);
+            setLessonFormOpen(true);
+          }}
+        />
+      )}
     </AppShell>
   );
 }
