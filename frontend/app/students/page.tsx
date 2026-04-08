@@ -5,6 +5,8 @@ import { Search } from 'lucide-react';
 import AppShell from '@/components/layout/AppShell';
 import AppHeader from '@/components/layout/AppHeader';
 import Modal from '@/components/common/Modal';
+import BillingPolicyModal from '@/components/students/BillingPolicyModal';
+import RegularScheduleModal from '@/components/students/RegularScheduleModal';
 import { getCancelMakeups, getLessons, getStudents, createStudent, updateStudent, deleteStudent } from '@/lib/api';
 import { PAYMENT_BADGE } from '@/lib/constants';
 import type { CancelMakeup, Lesson, PaymentStatus, Student, StudentFormData } from '@/lib/types';
@@ -27,6 +29,8 @@ function StudentDetailModal({
   onEdit: () => void;
   onDelete: (id: number) => void;
 }) {
+  const [billingPolicyOpen, setBillingPolicyOpen] = useState(false);
+  const [regularScheduleOpen, setRegularScheduleOpen] = useState(false);
   const studentLessons = lessons.filter(l => l.student === student.id);
   const studentCancels = cancels.filter(c => c.student === student.id);
   const pay = PAYMENT_BADGE[student.payment_status] ?? PAYMENT_BADGE['대기'];
@@ -104,12 +108,32 @@ function StudentDetailModal({
         </>
       )}
 
+      {/* 청구/일정 관리 */}
+      <div style={{ display: 'flex', gap: 8, marginTop: 12, marginBottom: 8 }}>
+        <button onClick={() => setBillingPolicyOpen(true)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, background: '#e8f4fd', color: '#3a8fd4', fontSize: 12, fontWeight: 500, border: 'none', cursor: 'pointer' }}>수업료 규칙</button>
+        <button onClick={() => setRegularScheduleOpen(true)} style={{ flex: 1, padding: '8px 0', borderRadius: 8, background: '#f0e8fd', color: '#8a7fb6', fontSize: 12, fontWeight: 500, border: 'none', cursor: 'pointer' }}>정규 일정</button>
+      </div>
+
       {/* 액션 */}
-      <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+      <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
         <button onClick={onEdit} style={{ flex: 1, padding: '10px 0', borderRadius: 12, background: '#8FDCCF', color: '#fff', fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer' }}>수정</button>
         <button onClick={() => { onDelete(student.id); onClose(); }} style={{ padding: '10px 16px', borderRadius: 12, background: '#ffeaea', color: '#d94a4a', fontSize: 13, fontWeight: 500, border: 'none', cursor: 'pointer' }}>삭제</button>
       </div>
       <button onClick={onClose} style={{ width: '100%', marginTop: 8, padding: '10px 0', borderRadius: 12, background: '#f7f8fa', color: '#888', fontSize: 13, border: 'none', cursor: 'pointer' }}>닫기</button>
+
+      {/* 모달들 */}
+      <BillingPolicyModal
+        open={billingPolicyOpen}
+        onClose={() => setBillingPolicyOpen(false)}
+        studentId={student.id}
+        onSave={() => setBillingPolicyOpen(false)}
+      />
+      <RegularScheduleModal
+        open={regularScheduleOpen}
+        onClose={() => setRegularScheduleOpen(false)}
+        studentId={student.id}
+        onSave={() => setRegularScheduleOpen(false)}
+      />
     </Modal>
   );
 }

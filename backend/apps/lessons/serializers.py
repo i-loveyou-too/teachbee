@@ -22,7 +22,16 @@ class LessonSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Lesson
-        fields = '__all__'
+        fields = [
+            'id', 'student', 'student_name', 'class_date', 'lesson_date',
+            'start_time', 'end_time', 'subject', 'location', 'class_mode', 'method',
+            'status', 'payment_status', 'homework_checked', 'prep_checked', 'prep_done',
+            'memo', 'origin_class', 'created_at', 'updated_at', 'homework',
+            'regular_day', 'regular_time', 'lesson_method',
+            'billing_kind', 'related_class_id', 'makeup_pricing_mode', 'makeup_fee_amount',
+            'counts_toward_cycle', 'absence_pricing_mode', 'reschedule_mode',
+            'original_class_date', 'change_reason', 'billing_note'
+        ]
 
     def to_representation(self, instance):
         ret = super().to_representation(instance)

@@ -6,7 +6,7 @@ import AppShell from '@/components/layout/AppShell';
 import AppHeader from '@/components/layout/AppHeader';
 import Modal from '@/components/common/Modal';
 import LessonFormSheet from '@/components/lessons/LessonFormSheet';
-import { getHomeDashboard, getLessons, updateTodo, updateLesson, getTodos, createTodo } from '@/lib/api';
+import { getHomeDashboard, getLessons, updateTodo, updateLesson, getTodos, createTodo, completeLesson } from '@/lib/api';
 import type { DashboardSummary, Lesson, Todo } from '@/lib/types';
 import { DEFAULT_STUDENT_COLOR_KEY, STUDENT_COLOR_BY_ID, getStudentPalette } from '@/lib/constants';
 import { todayStr } from '@/lib/utils';
@@ -211,7 +211,16 @@ function LessonDetailModal({
       {/* 하단 액션 */}
       <div style={{ display: 'flex', gap: 8 }}>
         <button
-          onClick={() => handlePatch({ status: '완료' })}
+          onClick={async () => {
+            try {
+              await completeLesson(lesson.id);
+              onRefresh?.();
+              onClose();
+            } catch (err) {
+              console.error('Failed to complete lesson:', err);
+              alert('수업 완료 처리에 실패했습니다.');
+            }
+          }}
           style={{ flex: 1, padding: '14px 0', borderRadius: 18, background: '#8FDCCF', color: '#fff', fontSize: 14, fontWeight: 800, border: 'none', cursor: 'pointer' }}
         >
           수업 완료

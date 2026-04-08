@@ -4,6 +4,10 @@ export type PaymentStatus = '대기' | '입금완료' | '미납' | '부분입금
 export type LessonStatus = '예정' | '완료' | '결석' | '보강';
 export type LessonMethod = '대면' | '온라인';
 export type StudentColorKey = 'mint' | 'peach' | 'sky' | 'butter' | 'gray';
+export type BillingKind = 'regular' | 'makeup' | 'absent' | 'extra';
+export type MakeupPricingMode = 'free' | 'fixed' | 'same';
+export type AbsencePricingMode = 'charge' | 'free';
+export type PaymentRequestStatus = 'pending' | 'paid' | 'cancelled';
 
 export interface Student {
   id: number;
@@ -37,6 +41,12 @@ export interface Lesson {
   homework_checked: boolean;
   prep_done: boolean;
   memo: string;
+  billing_kind?: BillingKind;
+  makeup_pricing_mode?: MakeupPricingMode;
+  makeup_fee_amount?: number | null;
+  counts_toward_cycle?: boolean;
+  absence_pricing_mode?: AbsencePricingMode;
+  billing_note?: string;
   created_at: string;
   updated_at: string;
 }
@@ -75,6 +85,48 @@ export interface Payment {
   memo: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface StudentBillingPolicy {
+  id: number;
+  student: number;
+  billing_kind: BillingKind;
+  cycle_lesson_count: number;
+  fee_amount: number;
+  is_active: boolean;
+  memo: string;
+  created_at: string;
+}
+
+export interface StudentRegularSchedule {
+  id: number;
+  student: number;
+  day_of_week: number;
+  day_of_week_display?: string;
+  start_time: string;
+  end_time: string | null;
+  location: string;
+  is_active: boolean;
+}
+
+export interface PaymentRequest {
+  id: number;
+  student: number;
+  student_name: string;
+  billing_policy: number | null;
+  amount: number;
+  status: PaymentRequestStatus;
+  period_start: string | null;
+  period_end: string | null;
+  lesson_count: number;
+  note: string;
+  created_at: string;
+  paid_at: string | null;
+  classes?: Array<{
+    id: number;
+    lesson_id: number;
+    lesson_date: string;
+  }>;
 }
 
 // ===== API Response Wrappers =====

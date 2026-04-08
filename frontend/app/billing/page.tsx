@@ -3,9 +3,10 @@
 import { useEffect, useState } from 'react';
 import AppShell from '@/components/layout/AppShell';
 import AppHeader from '@/components/layout/AppHeader';
-import { getPayments, updatePayment } from '@/lib/api';
+import PaymentRequestCard from '@/components/billing/PaymentRequestCard';
+import { getPayments, updatePayment, getPaymentRequests } from '@/lib/api';
 import { PAYMENT_BADGE } from '@/lib/constants';
-import type { Payment } from '@/lib/types';
+import type { Payment, PaymentRequest } from '@/lib/types';
 import { ChevronRight } from 'lucide-react';
 
 // 상태 라벨 매핑 함수
@@ -23,18 +24,26 @@ const getPaymentStatusLabel = (status: string | undefined): string =>
 
 export default function BillingPage() {
   const [payments, setPayments] = useState<Payment[]>([]);
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequest[]>([]);
 
   useEffect(() => {
     let mounted = true;
-    getPayments()
-      .then(data => {
-        if (!mounted) return;
-        setPayments(data);
-      })
-      .catch(() => {
-        if (!mounted) return;
+    Promise.allSettled([
+      getPayments(),
+      getPaymentRequests({ status: 'pending' }),
+    ]).then(([paymentsResult, requestsResult]) => {
+      if (!mounted) return;
+      if (paymentsResult.status === 'fulfilled') {
+        setPayments(paymentsResult.value);
+      } else {
         setPayments([]);
-      });
+      }
+      if (requestsResult.status === 'fulfilled') {
+        setPaymentRequests(requestsResult.value);
+      } else {
+        setPaymentRequests([]);
+      }
+    });
     return () => {
       mounted = false;
     };
@@ -90,6 +99,24 @@ export default function BillingPage() {
             </div>
           </div>
         </div>
+
+        {/* 청구 요청 리스트 */}
+        {paymentRequests.length > 0 && (
+          <div style={{ marginBottom: 32 }}>
+            <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginBottom: 12 }}>청구 요청</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {paymentRequests.map(pr => (
+                <PaymentRequestCard
+                  key={pr.id}
+                  request={pr}
+                  onMarkPaid={() => {
+                    setPaymentRequests(prev => prev.filter(p => p.id !== pr.id));
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* 학생별 정산 리스트 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>

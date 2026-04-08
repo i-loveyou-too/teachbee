@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Student
+from .models import Student, StudentBillingPolicy, StudentRegularSchedule
 
 class StudentSerializer(serializers.ModelSerializer):
     fee = serializers.IntegerField(source='default_class_fee', required=False)
@@ -28,3 +28,27 @@ class StudentSerializer(serializers.ModelSerializer):
 
     def get_lesson_method(self, obj):
         return '대면'
+
+
+class StudentBillingPolicySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StudentBillingPolicy
+        fields = [
+            'id', 'student', 'billing_kind', 'cycle_lesson_count',
+            'fee_amount', 'is_active', 'memo', 'created_at'
+        ]
+
+
+class StudentRegularScheduleSerializer(serializers.ModelSerializer):
+    day_of_week_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StudentRegularSchedule
+        fields = [
+            'id', 'student', 'day_of_week', 'day_of_week_display',
+            'start_time', 'end_time', 'location', 'is_active'
+        ]
+
+    def get_day_of_week_display(self, obj):
+        days = ['월', '화', '수', '목', '금', '토', '일']
+        return days[obj.day_of_week] if 0 <= obj.day_of_week < 7 else ''

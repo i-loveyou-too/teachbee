@@ -19,3 +19,36 @@ class Student(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class StudentBillingPolicy(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='billing_policies')
+    billing_kind = models.CharField(max_length=20, default='regular')
+    cycle_lesson_count = models.IntegerField(default=4)
+    fee_amount = models.DecimalField(max_digits=10, decimal_places=0, default=0)
+    is_active = models.BooleanField(default=True)
+    memo = models.TextField(blank=True, default='')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        managed = False
+        db_table = 'student_billing_policies'
+
+    def __str__(self):
+        return f'{self.student.name} - {self.billing_kind}'
+
+
+class StudentRegularSchedule(models.Model):
+    student = models.ForeignKey(Student, on_delete=models.CASCADE, related_name='regular_schedules')
+    day_of_week = models.IntegerField()
+    start_time = models.TimeField()
+    end_time = models.TimeField(null=True, blank=True)
+    location = models.CharField(max_length=200, blank=True, default='')
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        managed = False
+        db_table = 'student_regular_schedules'
+
+    def __str__(self):
+        return f'{self.student.name} - {self.get_day_of_week_display()}'

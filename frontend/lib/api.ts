@@ -5,6 +5,9 @@ import type {
   Payment,
   Student,
   Todo,
+  StudentBillingPolicy,
+  StudentRegularSchedule,
+  PaymentRequest,
   LessonFormData,
   StudentFormData,
   TodoFormData,
@@ -24,16 +27,20 @@ const API_PREFIX = '/api';
 const USE_MOCK = false; // [CRITICAL] Mock 모드를 강제로 비활성화하여 실제 API만 사용
 
 const ENDPOINTS = {
-  students: '/teacher/students/', 
+  students: '/teacher/students/',
   lessons: '/teacher/classes/',
-  todos: '/todos/', 
+  todos: '/todos/',
   payments: '/payments/',
   cancelMakeups: '/cancel-makeups/',
+  billingPolicies: '/billing-policies/',
+  regularSchedules: '/regular-schedules/',
+  paymentRequests: '/payment-requests/',
   homeSummary: '/home/summary',
   homeTodayClasses: '/home/today-classes',
   homeTodayTasks: '/home/today-tasks',
   homeAlerts: '/home/alerts',
   lessonDetail: (id: number) => `/lessons/${id}/`,
+  lessonComplete: (id: number) => `/lessons/${id}/complete/`,
 } as const;
 
 async function request<T>(path: string, options?: RequestInit): Promise<T> {
@@ -318,6 +325,71 @@ export async function updateCancelMakeup(id: number, payload: Partial<CancelMake
     return updated;
   }
   return request<CancelMakeup>(`${ENDPOINTS.cancelMakeups}${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+}
+
+// ===== Billing Policies =====
+export async function getBillingPolicies(studentId?: number): Promise<StudentBillingPolicy[]> {
+  const query = new URLSearchParams();
+  if (studentId) query.set('student_id', String(studentId));
+  const q = query.toString();
+  const data = await request<StudentBillingPolicy[]>(`${ENDPOINTS.billingPolicies}${q ? `?${q}` : ''}`);
+  return normalizeList<StudentBillingPolicy>(data);
+}
+
+export async function createBillingPolicy(payload: Partial<StudentBillingPolicy>): Promise<StudentBillingPolicy> {
+  return request<StudentBillingPolicy>(ENDPOINTS.billingPolicies, { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export async function updateBillingPolicy(id: number, payload: Partial<StudentBillingPolicy>): Promise<StudentBillingPolicy> {
+  return request<StudentBillingPolicy>(`${ENDPOINTS.billingPolicies}${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+}
+
+export async function deleteBillingPolicy(id: number): Promise<void> {
+  await request(`${ENDPOINTS.billingPolicies}${id}/`, { method: 'DELETE' });
+}
+
+// ===== Regular Schedules =====
+export async function getRegularSchedules(studentId?: number): Promise<StudentRegularSchedule[]> {
+  const query = new URLSearchParams();
+  if (studentId) query.set('student_id', String(studentId));
+  const q = query.toString();
+  const data = await request<StudentRegularSchedule[]>(`${ENDPOINTS.regularSchedules}${q ? `?${q}` : ''}`);
+  return normalizeList<StudentRegularSchedule>(data);
+}
+
+export async function createRegularSchedule(payload: Partial<StudentRegularSchedule>): Promise<StudentRegularSchedule> {
+  return request<StudentRegularSchedule>(ENDPOINTS.regularSchedules, { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export async function updateRegularSchedule(id: number, payload: Partial<StudentRegularSchedule>): Promise<StudentRegularSchedule> {
+  return request<StudentRegularSchedule>(`${ENDPOINTS.regularSchedules}${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+}
+
+export async function deleteRegularSchedule(id: number): Promise<void> {
+  await request(`${ENDPOINTS.regularSchedules}${id}/`, { method: 'DELETE' });
+}
+
+// ===== Payment Requests =====
+export async function getPaymentRequests(params?: { student_id?: number; status?: string }): Promise<PaymentRequest[]> {
+  const query = new URLSearchParams();
+  if (params?.student_id) query.set('student_id', String(params.student_id));
+  if (params?.status) query.set('status', params.status);
+  const q = query.toString();
+  const data = await request<PaymentRequest[]>(`${ENDPOINTS.paymentRequests}${q ? `?${q}` : ''}`);
+  return normalizeList<PaymentRequest>(data);
+}
+
+export async function createPaymentRequest(payload: Partial<PaymentRequest>): Promise<PaymentRequest> {
+  return request<PaymentRequest>(ENDPOINTS.paymentRequests, { method: 'POST', body: JSON.stringify(payload) });
+}
+
+export async function updatePaymentRequest(id: number, payload: Partial<PaymentRequest>): Promise<PaymentRequest> {
+  return request<PaymentRequest>(`${ENDPOINTS.paymentRequests}${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+}
+
+// ===== Lesson Complete (auto-billing) =====
+export async function completeLesson(id: number): Promise<{ status: string; lesson: Lesson }> {
+  return request<{ status: string; lesson: Lesson }>(ENDPOINTS.lessonComplete(id), { method: 'POST' });
 }
 
 // ===== Home Dashboard =====
