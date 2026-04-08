@@ -672,9 +672,9 @@ export default function HomePage() {
           <div className="glass-card" style={{ ...cardShell, padding: '24px 20px', borderRadius: 32 }}>
             <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a', marginBottom: 18 }}>정산 처리 필요</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {unpaidPayments.slice(0, 2).map(s => (
+              {unpaidPayments.slice(0, 2).map((s, idx) => (
                 <div
-                  key={s.id}
+                  key={`unpaid-${s.student_name}-${s.amount}`}
                   style={{
                     borderRadius: 20,
                     padding: '16px',
@@ -688,7 +688,7 @@ export default function HomePage() {
                 >
                   <div>
                     <div style={{ fontSize: 14, fontWeight: 800, color: '#d94a4a' }}>{s.student_name} 미납</div>
-                    <div style={{ fontSize: 12, color: '#d94a4a', opacity: 0.8, marginTop: 2 }}>{s.amount.toLocaleString()}원 결제 필요</div>
+                    <div style={{ fontSize: 12, color: '#d94a4a', opacity: 0.8, marginTop: 2 }}>{(s as any).amount.toLocaleString()}원 결제 필요</div>
                   </div>
                   <ChevronRight size={18} color="#d94a4a" />
                 </div>

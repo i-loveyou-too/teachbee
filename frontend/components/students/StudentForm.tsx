@@ -23,8 +23,11 @@ export default function StudentForm({ open, onClose, onSave, student }: StudentF
       phone: fd.get('phone') as string,
       subject: fd.get('subject') as string,
       default_location: fd.get('default_location') as string,
+      regular_day: fd.get('regular_day') as string,
+      regular_time: fd.get('regular_time') as string,
+      lesson_method: fd.get('lesson_method') as string,
       fee: Number(fd.get('fee')) || 0,
-      payment_status: (fd.get('payment_status') as StudentFormData['payment_status']) ?? '대기',
+      payment_status: (fd.get('payment_status') as any) ?? '대기',
       memo: fd.get('memo') as string,
     };
     try {

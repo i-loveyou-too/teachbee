@@ -82,8 +82,8 @@ export default function StudentDetailPage({ params }: Props) {
             <div style={{ fontSize: 20, fontWeight: 700, color: '#222' }}>{student.name}</div>
             <div style={{ fontSize: 12, color: '#888' }}>
               {student.subject}
-              {(student as any).regular_day ? ` · ${(student as any).regular_day}` : ''}
-              {(student as any).regular_time ? ` ${(student as any).regular_time}` : ''}
+              {student.regular_day ? ` · ${student.regular_day}` : ''}
+              {student.regular_time ? ` ${student.regular_time}` : ''}
             </div>
           </div>
         </div>
@@ -94,7 +94,7 @@ export default function StudentDetailPage({ params }: Props) {
             { label: '수업료', value: `${student.fee.toLocaleString()}원` },
             { label: '장소', value: student.default_location || '-' },
             { label: '연락처', value: student.phone || '-' },
-            { label: '방식', value: (student as any).lesson_method || '대면' },
+            { label: '방식', value: student.lesson_method || '대면' },
           ].map(({ label, value }) => (
             <div key={label} style={{ background: '#f7f8fa', borderRadius: 12, padding: 12 }}>
               <div style={{ fontSize: 11, color: '#888', marginBottom: 2 }}>{label}</div>

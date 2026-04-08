@@ -49,8 +49,8 @@ function StudentDetailModal({
           <div style={{ fontSize: 18, fontWeight: 700 }}>{student.name}</div>
           <div style={{ fontSize: 12, color: '#888' }}>
             {student.subject}
-            {(student as any).regular_day ? ` · ${(student as any).regular_day}` : ''}
-            {(student as any).regular_time ? ` ${(student as any).regular_time}` : ''}
+            {student.regular_day ? ` · ${student.regular_day}` : ''}
+            {student.regular_time ? ` ${student.regular_time}` : ''}
           </div>
         </div>
       </div>
@@ -160,11 +160,11 @@ function StudentFormModal({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
           <div>
             <label style={labelStyle}>수업 요일</label>
-            <input name="regular_day" defaultValue={(student as any)?.regular_day ?? ''} placeholder="월, 수" style={inputStyle} />
+            <input name="regular_day" defaultValue={student?.regular_day ?? ''} placeholder="월, 수" style={inputStyle} />
           </div>
           <div>
             <label style={labelStyle}>수업 시간</label>
-            <input name="regular_time" type="time" defaultValue={(student as any)?.regular_time ?? ''} style={inputStyle} />
+            <input name="regular_time" type="time" defaultValue={student?.regular_time ?? ''} style={inputStyle} />
           </div>
         </div>
 
@@ -172,7 +172,7 @@ function StudentFormModal({
         <input name="default_location" defaultValue={student?.default_location ?? ''} style={inputStyle} />
 
         <label style={labelStyle}>수업 방식</label>
-        <select name="lesson_method" defaultValue={(student as any)?.lesson_method ?? '대면'} style={inputStyle}>
+        <select name="lesson_method" defaultValue={student?.lesson_method ?? '대면'} style={inputStyle}>
           <option value="대면">대면</option>
           <option value="온라인">온라인</option>
         </select>
@@ -334,7 +334,7 @@ export default function StudentsPage() {
                       <div style={{ fontSize: 14, fontWeight: 600, color: '#222' }}>{student.name}</div>
                       <div style={{ fontSize: 11, color: '#888' }}>
                         {student.subject}
-                        {(student as any).regular_day ? ` · ${(student as any).regular_day}` : ''}
+                        {student.regular_day ? ` · ${student.regular_day}` : ''}
                       </div>
                     </div>
                   </div>
