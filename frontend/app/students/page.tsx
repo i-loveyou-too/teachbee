@@ -214,29 +214,34 @@ export default function StudentsPage() {
   const [detailStudent, setDetailStudent] = useState<Student | null>(null);
   const [editStudent, setEditStudent] = useState<Student | null>(null);
   const [formOpen, setFormOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
-    let mounted = true;
+    setLoading(true);
+    setError(false);
+
     Promise.all([getStudents(), getLessons(), getCancelMakeups()])
       .then(([studentsData, lessonsData, cancelsData]) => {
-        if (!mounted) return;
-        setStudents(studentsData);
+        // 백엔드에서 이미 필드명이 매핑되어 있으므로 정규화 불필요
+        setStudents(studentsData || []);
         setLessons(lessonsData);
         setCancels(cancelsData);
       })
-      .catch(() => {
-        if (!mounted) return;
-        setStudents([]);
-        setLessons([]);
-        setCancels([]);
+      .catch((err) => {
+        console.error('Failed to fetch students data:', err);
+        setError(true);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-    return () => {
-      mounted = false;
-    };
   }, []);
 
   const filtered = query
-    ? students.filter(s => s.name.toLowerCase().includes(query.toLowerCase()) || s.subject.includes(query))
+    ? students.filter(s => 
+        (s.name?.toLowerCase() || '').includes(query.toLowerCase()) || 
+        (s.subject?.toLowerCase() || '').includes(query.toLowerCase())
+      )
     : students;
 
   const handleSave = async (data: any) => {
@@ -288,7 +293,15 @@ export default function StudentsPage() {
         </div>
 
         {/* 학생 리스트 */}
-        {filtered.length === 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#888', fontSize: 14 }}>
+            학생 정보를 불러오는 중...
+          </div>
+        ) : error ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#ff6b6b', fontSize: 14 }}>
+            데이터를 불러오지 못했습니다. 잠시 후 다시 시도해주세요.
+          </div>
+        ) : filtered.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '40px 0', color: '#888', fontSize: 13 }}>
             {query ? '검색 결과가 없어요' : '학생을 추가해보세요'}
           </div>
@@ -308,7 +321,7 @@ export default function StudentsPage() {
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div style={{ width: 38, height: 38, borderRadius: '50%', background: '#EEF9F6', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 600, color: '#8FDCCF' }}>
-                      {student.name[0]}
+                      {student.name?.[0] || '?'}
                     </div>
                     <div>
                       <div style={{ fontSize: 14, fontWeight: 600, color: '#222' }}>{student.name}</div>

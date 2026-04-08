@@ -24,8 +24,8 @@ const API_PREFIX = '/api';
 const USE_MOCK = false; // [CRITICAL] Mock 모드를 강제로 비활성화하여 실제 API만 사용
 
 const ENDPOINTS = {
-  students: '/students/', 
-  lessons: '/lessons/',
+  students: '/teacher/students/', 
+  lessons: '/teacher/classes/',
   todos: '/todos/', 
   payments: '/payments/',
   cancelMakeups: '/cancel-makeups/',
@@ -177,9 +177,9 @@ export async function getTodos(params?: { due_date?: string; is_completed?: bool
     return items;
   }
   const query = new URLSearchParams();
-  if (params?.due_date) query.set('due_date', params.due_date);
+  if (params?.due_date) query.set('task_date', params.due_date);
   if (typeof params?.is_completed === 'boolean') query.set('is_completed', String(params.is_completed));
-  if (params?.lesson) query.set('class_id', String(params.lesson));
+  if (params?.lesson) query.set('lesson', String(params.lesson));
   const q = query.toString();
   const data = await request<Todo[] | { results: Todo[] }>(`${ENDPOINTS.todos}${q ? `?${q}` : ''}`);
   return normalizeList<Todo>(data);
@@ -202,7 +202,21 @@ export async function updateTodo(id: number, payload: Partial<TodoFormData>): Pr
     mockStore.todos[idx] = updated;
     return updated;
   }
-  return request<Todo>(`${ENDPOINTS.todos}${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+  // 프론트 필드명 (is_completed, due_date) -> 백엔드 필드명 (is_completed, task_date)
+  const backendPayload: any = { ...payload };
+  if ('done' in payload) {
+    backendPayload.is_completed = payload.done;
+    delete backendPayload.done;
+  }
+  if ('due_date' in payload) {
+    backendPayload.task_date = payload.due_date;
+    delete backendPayload.due_date;
+  }
+  if ('text' in payload) {
+    backendPayload.title = payload.text;
+    delete backendPayload.text;
+  }
+  return request<Todo>(`${ENDPOINTS.todos}${id}/`, { method: 'PATCH', body: JSON.stringify(backendPayload) });
 }
 
 export async function deleteTodo(id: number): Promise<void> {

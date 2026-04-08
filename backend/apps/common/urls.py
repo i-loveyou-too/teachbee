@@ -1,9 +1,9 @@
 from django.urls import path
-from .views import today_classes, today_tasks, summary, alerts
+from . import views
 
 urlpatterns = [
-    path('home/today-classes', today_classes),
-    path('home/today-tasks', today_tasks),
-    path('home/summary', summary),
-    path('home/alerts', alerts),
+    # 프론트엔드가 요구하는 teacher 엔드포인트 매핑
+    path('teacher/students/', views.student_list, name='teacher-students'),
+    path('teacher/classes/', views.class_list, name='teacher-classes'),
+    path('summary/', views.home_summary, name='home-summary'),
 ]

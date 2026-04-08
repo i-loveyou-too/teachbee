@@ -1,7 +1,9 @@
 {
   "permissions": {
     "allow": [
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Bash(python manage.py shell -c \"from apps.students.models import Student; print\\(f'Students: {Student.objects.count\\(\\)}'\\); print\\([s.name for s in Student.objects.all\\(\\)[:3]]\\)\")",
+      "Bash(python manage.py shell -c \"from apps.lessons.models import Lesson; from datetime import date; print\\(f'Total Lessons: {Lesson.objects.count\\(\\)}'\\); today_lessons = Lesson.objects.filter\\(class_date=date.today\\(\\)\\); print\\(f'Today lessons: {today_lessons.count\\(\\)}'\\); print\\([f'{l.student.name} {l.class_date}' for l in Lesson.objects.all\\(\\)[:3]]\\)\")"
     ]
   }
 }

@@ -1,36 +1,39 @@
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from django.utils import timezone
+from apps.students.models import Student
 from apps.lessons.models import Lesson
+from apps.students.serializers import StudentSerializer
+from apps.lessons.serializers import LessonSerializer
 from apps.todos.models import Task
 from apps.billing.models import Payment
 
 @api_view(['GET'])
-def today_classes(request):
-    """오늘 수업 목록 API"""
-    # 쿼리 파라미터로 date가 오면 해당 날짜, 없으면 오늘 날짜 기준
-    target_date = request.query_params.get('date', timezone.now().date().isoformat())
-    # class_date 필드를 사용하여 필터링 (db_table='classes' 매핑 확인됨)
-    classes = Lesson.objects.filter(class_date=target_date).order_by('start_time')
+def student_list(request):
+    """전체 학생 목록 API"""
+    students = Student.objects.all().order_by('name')
+    serializer = StudentSerializer(students, many=True)
+    return Response(serializer.data)
+
+@api_view(['GET'])
+def class_list(request):
+    """수업 목록 API (날짜 필터링 지원)"""
+    target_date = request.query_params.get('date')
+    if target_date:
+        # 특정 날짜 수업 (캘린더/홈 탭용)
+        classes = Lesson.objects.filter(class_date=target_date).order_by('start_time')
+    else:
+        # 전체 수업 목록
+        classes = Lesson.objects.all().order_by('-class_date', 'start_time')
     
-    data = [{
-        "id": l.id,
-        "student_name": l.student.name,
-        "class_date": str(l.class_date),
-        "start_time": str(l.start_time),
-        "end_time": str(l.end_time) if l.end_time else None,
-        "subject": l.subject,
-        "location": l.location,
-        "status": l.status,
-    } for l in classes]
-    
-    return Response(data)
+    serializer = LessonSerializer(classes, many=True)
+    return Response(serializer.data)
 
 @api_view(['GET'])
 def home_summary(request):
     """홈 상단 요약 지표 API"""
     today = timezone.now().date()
-    
+
     data = {
         "today_class_count": Lesson.objects.filter(class_date=today).count(),
         "unpaid_count": Payment.objects.filter(status__in=['unpaid', 'pending']).count(),
@@ -38,6 +41,14 @@ def home_summary(request):
         "today_task_count": Task.objects.filter(task_date=today, is_completed=False).count()
     }
     return Response(data)
+
+@api_view(['GET'])
+def today_classes(request):
+    """오늘 진행 예정인 수업 목록 API"""
+    today = timezone.now().date()
+    classes = Lesson.objects.filter(class_date=today).order_by('start_time')
+    serializer = LessonSerializer(classes, many=True)
+    return Response(serializer.data)
 
 @api_view(['GET'])
 def today_tasks(request):

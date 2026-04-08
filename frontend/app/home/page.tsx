@@ -117,6 +117,7 @@ function LessonDetailModal({
       fetchTasks(lesson.id);
     } catch (error) {
       console.error('Failed to add todo:', error);
+      alert('할 일 추가에 실패했습니다.');
     }
   };
 
@@ -298,7 +299,7 @@ export default function HomePage() {
   const lessonsByDate = useMemo(() => {
     const map: Record<string, Lesson[]> = {};
     lessons.forEach(lesson => {
-      const dateKey = lesson.class_date || (lesson as any).lesson_date;
+      const dateKey = lesson.lesson_date;
       if (!map[dateKey]) map[dateKey] = [];
       map[dateKey].push(lesson);
     });
@@ -310,8 +311,8 @@ export default function HomePage() {
     .sort((a, b) => a.start_time.localeCompare(b.start_time));
   const todayLessons = lessonsByDate[TODAY_STR] ?? [];
 
-  const pendingTodos = todos.filter(t => !t.is_completed);
-  const doneTodos = todos.filter(t => t.is_completed);
+  const pendingTodos = todos.filter(t => !t.done && t.text && t.text.trim() !== '');
+  const doneTodos = todos.filter(t => t.done && t.text && t.text.trim() !== '');
 
   const unpaidPayments = dashboard?.unpaid_payments ?? [];
   const makeupNeeded = dashboard?.makeup_needed ?? [];
@@ -410,12 +411,12 @@ export default function HomePage() {
     );
   };
 
-  const toggleTodo = async (id: number, is_completed: boolean) => {
+  const toggleTodo = async (id: number, done: boolean) => {
     try {
-      const updated = await updateTodo(id, { is_completed });
+      const updated = await updateTodo(id, { done });
       setTodos(prev => prev.map(todo => (todo.id === id ? updated : todo)));
     } catch {
-      setTodos(prev => prev.map(todo => (todo.id === id ? { ...todo, is_completed } : todo)));
+      setTodos(prev => prev.map(todo => (todo.id === id ? { ...todo, done } : todo)));
     }
   };
 
@@ -549,25 +550,13 @@ export default function HomePage() {
           </div>
         </div>
 
-        <div className="glass-card" style={{ ...cardShell, padding: '24px 20px', borderRadius: 32 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
-            <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a' }}>오늘 할 일</div>
-            <div style={{ fontSize: 12, color: '#f5c842', fontWeight: 800 }}>{pendingTodos.length}개 남음</div>
-          </div>
-
-          {pendingTodos.length === 0 && doneTodos.length === 0 ? (
-            <div
-              style={{
-                borderRadius: 20,
-                padding: 24,
-                textAlign: 'center',
-                background: 'rgba(247, 248, 250, 0.4)',
-                color: '#bbb',
-              }}
-            >
-              <div style={{ fontSize: 13, fontWeight: 600 }}>할 일이 없습니다</div>
+        {(pendingTodos.length > 0 || doneTodos.length > 0) && (
+          <div className="glass-card" style={{ ...cardShell, padding: '24px 20px', borderRadius: 32 }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+              <div style={{ fontSize: 16, fontWeight: 800, color: '#1a1a1a' }}>오늘 할 일</div>
+              <div style={{ fontSize: 12, color: '#f5c842', fontWeight: 800 }}>{pendingTodos.length}개 남음</div>
             </div>
-          ) : (
+
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {pendingTodos.map(todo => (
                 <div
@@ -630,8 +619,8 @@ export default function HomePage() {
                 </div>
               ))}
             </div>
-          )}
-        </div>
+          </div>
+        )}
 
         {(unpaidPayments.length > 0 || makeupNeeded.length > 0) && (
           <div className="glass-card" style={{ ...cardShell, padding: '24px 20px', borderRadius: 32 }}>

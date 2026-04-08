@@ -8,13 +8,8 @@ import TodoForm from '@/components/todo/TodoForm';
 import type { Todo, TodoFormData } from '@/lib/types';
 import { getTodos, createTodo, updateTodo, deleteTodo } from '@/lib/api';
 import { groupTodosByDate, todayStr, fmtFull } from '@/lib/utils';
-
-// 자동 리마인더 — 추후 대시보드 API 기반으로 교체 가능
-const AUTO_REMINDERS = [
-  { key: 'r1', bg: '#fff8e1', icon: '📚', text: '김준호 수업 준비 필요' },
-  { key: 'r2', bg: '#ffeaea', icon: '💰', text: '이수지 미납 확인' },
-  { key: 'r3', bg: '#e8f4fd', icon: '🔄', text: '보강 일정 필요' },
-];
+import { getHomeDashboard } from '@/lib/api';
+import type { DashboardSummary } from '@/lib/types';
 
 // ── 개별 할 일 아이템 ──────────────────────────────────────────────────────
 function TodoItem({ todo, onToggle, onDelete, isTodayCard }: { todo: Todo; onToggle: () => void; onDelete: () => void; isTodayCard?: boolean }) {
@@ -181,17 +176,20 @@ export default function TodoPage() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loading, setLoading] = useState(true);
   const [formOpen, setFormOpen] = useState(false);
+  const [dashboard, setDashboard] = useState<DashboardSummary | null>(null);
   const dateInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    getTodos()
-      .then(data => {
-        setTodos(data);
+    Promise.all([getTodos(), getHomeDashboard()])
+      .then(([todosData, dashboardData]) => {
+        setTodos(todosData);
+        setDashboard(dashboardData);
         setLoading(false);
       })
       .catch(error => {
-        console.error('Failed to fetch todos:', error);
+        console.error('Failed to fetch data:', error);
         setTodos([]);
+        setDashboard(null);
         setLoading(false);
       });
   }, []);
@@ -199,12 +197,48 @@ export default function TodoPage() {
   const groups = useMemo(() => groupTodosByDate(todos), [todos]);
   const thisWeekCount = todos.filter(t => !t.done).length; // 실제로는 날짜 필터링 필요
 
+  // 자동 리마인더 생성
+  const autoReminders = useMemo(() => {
+    if (!dashboard) return [];
+
+    const reminders = [];
+    const { unpaid_payments = [], makeup_needed = [] } = dashboard;
+
+    // 미납 리마인더
+    if (unpaid_payments.length > 0) {
+      reminders.push({
+        key: 'unpaid',
+        bg: '#ffeaea',
+        icon: '💰',
+        text: `${unpaid_payments.length}건 미납 확인 필요`
+      });
+    }
+
+    // 보강 리마인더
+    if (makeup_needed.length > 0) {
+      reminders.push({
+        key: 'makeup',
+        bg: '#e8f4fd',
+        icon: '🔄',
+        text: `${makeup_needed.length}건 보강 일정 필요`
+      });
+    }
+
+    return reminders;
+  }, [dashboard]);
+
   const handleCreate = async (data: TodoFormData) => {
+    if (!data.text || !data.text.trim()) {
+      alert('할 일을 입력해주세요.');
+      return;
+    }
+
     try {
       const created = await createTodo(data);
-      setTodos(prev => [...prev, created]);
+      setTodos(prev => [created, ...prev]);
     } catch (error) {
       console.error('Failed to create todo:', error);
+      alert('할 일 추가에 실패했습니다. 잠시 후 다시 시도해주세요.');
     }
   };
 
@@ -276,17 +310,19 @@ export default function TodoPage() {
         </div>
 
         {/* 자동 리마인더 요약 카드 */}
-        <div style={{ background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 28, padding: '20px', marginBottom: 28, border: '1px solid rgba(255, 255, 255, 0.5)', boxShadow: '0 8px 24px rgba(0,0,0,0.02)' }}>
-          <div style={{ fontSize: 10, fontWeight: 800, color: '#ffb300', marginBottom: 12, letterSpacing: '0.06em' }}>AUTOMATIC REMINDERS</div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            {AUTO_REMINDERS.map(r => (
-              <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-                <div style={{ width: 34, height: 34, borderRadius: 10, background: r.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, border: '1px solid rgba(255,255,255,0.4)' }}>{r.icon}</div>
-                <span style={{ fontSize: 13, color: '#444', fontWeight: 500 }}>{r.text}</span>
-              </div>
-            ))}
+        {autoReminders.length > 0 && (
+          <div style={{ background: 'rgba(255, 255, 255, 0.6)', backdropFilter: 'blur(10px)', WebkitBackdropFilter: 'blur(10px)', borderRadius: 28, padding: '20px', marginBottom: 28, border: '1px solid rgba(255, 255, 255, 0.5)', boxShadow: '0 8px 24px rgba(0,0,0,0.02)' }}>
+            <div style={{ fontSize: 10, fontWeight: 800, color: '#ffb300', marginBottom: 12, letterSpacing: '0.06em' }}>AUTOMATIC REMINDERS</div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              {autoReminders.map(r => (
+                <div key={r.key} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+                  <div style={{ width: 34, height: 34, borderRadius: 10, background: r.bg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, border: '1px solid rgba(255,255,255,0.4)' }}>{r.icon}</div>
+                  <span style={{ fontSize: 13, color: '#444', fontWeight: 500 }}>{r.text}</span>
+                </div>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* 날짜별 그룹 */}
         {loading ? (
