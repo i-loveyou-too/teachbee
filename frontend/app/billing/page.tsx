@@ -46,10 +46,11 @@ export default function BillingPage() {
 
   const handleConfirm = async (id: number) => {
     try {
-      const updated = await updatePayment(id, { status: '입금완료' });
+      const updated = await updatePayment(id, { status: 'paid' });
       setPayments(prev => prev.map(p => (p.id === id ? updated : p)));
-    } catch {
-      setPayments(prev => prev.map(p => (p.id === id ? { ...p, status: '입금완료' } : p)));
+    } catch (error) {
+      console.error('Failed to confirm payment:', error);
+      alert('입금 확인에 실패했습니다.');
     }
   };
 

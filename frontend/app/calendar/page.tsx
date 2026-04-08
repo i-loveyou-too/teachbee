@@ -86,7 +86,7 @@ function LessonDetailModal({
     if (!newTodoTitle.trim()) return;
     await createTodo({
       text: newTodoTitle,
-      due_date: lesson.class_date || date,
+      due_date: lesson.lesson_date || date,
       done: false,
       related_student: lesson.student,
       related_lesson: lesson.id,

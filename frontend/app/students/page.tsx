@@ -221,20 +221,30 @@ export default function StudentsPage() {
     setLoading(true);
     setError(false);
 
-    Promise.all([getStudents(), getLessons(), getCancelMakeups()])
-      .then(([studentsData, lessonsData, cancelsData]) => {
-        // 백엔드에서 이미 필드명이 매핑되어 있으므로 정규화 불필요
-        setStudents(studentsData || []);
-        setLessons(lessonsData);
-        setCancels(cancelsData);
+    Promise.allSettled([getStudents(), getLessons(), getCancelMakeups()])
+      .then(([studentsResult, lessonsResult, cancelsResult]) => {
+        if (studentsResult.status === 'fulfilled') {
+          setStudents(studentsResult.value || []);
+        } else {
+          console.error('Failed to fetch students:', studentsResult.reason);
+          setError(true);
+        }
+
+        if (lessonsResult.status === 'fulfilled') {
+          setLessons(lessonsResult.value);
+        } else {
+          console.error('Failed to fetch lessons:', lessonsResult.reason);
+          setLessons([]);
+        }
+
+        if (cancelsResult.status === 'fulfilled') {
+          setCancels(cancelsResult.value);
+        } else {
+          console.error('Failed to fetch cancel makeups:', cancelsResult.reason);
+          setCancels([]);
+        }
       })
-      .catch((err) => {
-        console.error('Failed to fetch students data:', err);
-        setError(true);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
+      .finally(() => setLoading(false));
   }, []);
 
   const filtered = query
