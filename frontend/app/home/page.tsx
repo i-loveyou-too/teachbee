@@ -304,23 +304,43 @@ export default function HomePage() {
 
   const oneWeek = useMemo(() => buildOneWeek(), []);
 
-  const loadData = useCallback(async () => {
-    Promise.all([getHomeDashboard(), getLessons()])
-      .then(([dashboardData, lessonsData]) => {
-        setDashboard(dashboardData);
-        setTodos(dashboardData.today_todos);
-        setLessons(lessonsData);
-      })
-      .catch(() => setDashboard(null));
-  }, []);
-
   useEffect(() => {
     let mounted = true;
-    loadData();
+    (async () => {
+      try {
+        const [dashboardData, lessonsData] = await Promise.all([getHomeDashboard(), getLessons()]);
+        if (mounted) {
+          setDashboard(dashboardData);
+          setTodos(dashboardData.today_todos);
+          setLessons(lessonsData);
+        }
+      } catch (error) {
+        console.error('Failed to load dashboard data:', error);
+        if (mounted) {
+          setDashboard(null);
+          setLessons([]);
+          setTodos([]);
+        }
+      }
+    })();
     return () => {
       mounted = false;
     };
-  }, [loadData]);
+  }, []);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [dashboardData, lessonsData] = await Promise.all([getHomeDashboard(), getLessons()]);
+      setDashboard(dashboardData);
+      setTodos(dashboardData.today_todos);
+      setLessons(lessonsData);
+    } catch (error) {
+      console.error('Failed to reload dashboard data:', error);
+      setDashboard(null);
+      setLessons([]);
+      setTodos([]);
+    }
+  }, []);
 
   const lessonsByDate = useMemo(() => {
     const map: Record<string, Lesson[]> = {};
@@ -710,14 +730,16 @@ export default function HomePage() {
           backdropFilter: 'blur(8px)',
           color: '#fff',
           bottom: 100,
-          right: 'calc(50% - 210px)',
+          right: 20,
           boxShadow: '0 12px 32px rgba(92,198,186,0.4), inset 0 2px 2px rgba(255,255,255,0.3)',
-          zIndex: 50,
+          zIndex: 1000,
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           fontSize: 32,
           fontWeight: 300,
+          border: 'none',
+          cursor: 'pointer',
         }}
       >
         +

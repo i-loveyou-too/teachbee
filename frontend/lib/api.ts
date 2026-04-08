@@ -46,11 +46,7 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
 }
 
 function normalizeList<T>(data: T[] | { results?: T[] } | unknown): T[] {
-  if (Array.isArray(data)) return data;
-  if (data && typeof data === 'object' && Array.isArray((data as any).results)) {
-    return (data as any).results as T[];
-  }
-  return [];
+  return Array.isArray(data) ? data : [];
 }
 
 const mockStore = {
@@ -74,7 +70,7 @@ const nowIso = () => new Date().toISOString();
 // ===== Students =====
 export async function getStudents(): Promise<Student[]> {
   if (USE_MOCK) return [...mockStore.students];
-  const data = await request<Student[] | { results: Student[] }>(ENDPOINTS.students);
+  const data = await request<Student[]>(ENDPOINTS.students);
   return normalizeList<Student>(data);
 }
 
@@ -125,7 +121,7 @@ export async function getLessons(params?: { date?: string; student?: number; sta
   if (params?.student) query.set('student', String(params.student));
   if (params?.status) query.set('status', params.status);
   const q = query.toString();
-  const data = await request<Lesson[] | { results: Lesson[] }>(`${ENDPOINTS.lessons}${q ? `?${q}` : ''}`);
+  const data = await request<Lesson[]>(`${ENDPOINTS.lessons}${q ? `?${q}` : ''}`);
   return normalizeList<Lesson>(data);
 }
 
@@ -141,7 +137,22 @@ export async function createLesson(payload: LessonFormData): Promise<Lesson> {
     mockStore.lessons.push(created);
     return created;
   }
-  return request<Lesson>(ENDPOINTS.lessons, { method: 'POST', body: JSON.stringify(payload) });
+  
+  // 프론트 필드명 -> 백엔드 필드명 매핑 (class_date, class_mode)
+  const backendPayload: any = { ...payload };
+  if ('lesson_date' in backendPayload) {
+    backendPayload.class_date = backendPayload.lesson_date;
+    delete backendPayload.lesson_date;
+  }
+  if ('method' in backendPayload) {
+    backendPayload.class_mode = backendPayload.method;
+    delete backendPayload.method;
+  }
+  
+  return request<Lesson>(ENDPOINTS.lessons, { 
+    method: 'POST', 
+    body: JSON.stringify(backendPayload) 
+  });
 }
 
 export async function getLesson(id: number): Promise<Lesson> {
@@ -157,7 +168,22 @@ export async function updateLesson(id: number, payload: any): Promise<Lesson> {
     mockStore.lessons[idx] = updated;
     return updated;
   }
-  return request<Lesson>(`${ENDPOINTS.lessons}${id}/`, { method: 'PATCH', body: JSON.stringify(payload) });
+
+  // 프론트 필드명 -> 백엔드 필드명 매핑
+  const backendPayload: any = { ...payload };
+  if ('lesson_date' in backendPayload) {
+    backendPayload.class_date = backendPayload.lesson_date;
+    delete backendPayload.lesson_date;
+  }
+  if ('method' in backendPayload) {
+    backendPayload.class_mode = backendPayload.method;
+    delete backendPayload.method;
+  }
+
+  return request<Lesson>(`${ENDPOINTS.lessons}${id}/`, { 
+    method: 'PATCH', 
+    body: JSON.stringify(backendPayload) 
+  });
 }
 
 export async function deleteLesson(id: number): Promise<void> {
@@ -181,7 +207,7 @@ export async function getTodos(params?: { due_date?: string; is_completed?: bool
   if (typeof params?.is_completed === 'boolean') query.set('is_completed', String(params.is_completed));
   if (params?.lesson) query.set('lesson', String(params.lesson));
   const q = query.toString();
-  const data = await request<Todo[] | { results: Todo[] }>(`${ENDPOINTS.todos}${q ? `?${q}` : ''}`);
+  const data = await request<Todo[]>(`${ENDPOINTS.todos}${q ? `?${q}` : ''}`);
   return normalizeList<Todo>(data);
 }
 
@@ -237,7 +263,7 @@ export async function getPayments(params?: { student?: number }): Promise<Paymen
   const query = new URLSearchParams();
   if (params?.student) query.set('student', String(params.student));
   const q = query.toString();
-  const data = await request<Payment[] | { results: Payment[] }>(`${ENDPOINTS.payments}${q ? `?${q}` : ''}`);
+  const data = await request<Payment[]>(`${ENDPOINTS.payments}${q ? `?${q}` : ''}`);
   return normalizeList<Payment>(data);
 }
 
@@ -264,7 +290,7 @@ export async function getCancelMakeups(params?: { student?: number; makeup_done?
   if (params?.student) query.set('student', String(params.student));
   if (typeof params?.makeup_done === 'boolean') query.set('makeup_done', String(params.makeup_done));
   const q = query.toString();
-  const data = await request<CancelMakeup[] | { results: CancelMakeup[] }>(`${ENDPOINTS.cancelMakeups}${q ? `?${q}` : ''}`);
+  const data = await request<CancelMakeup[]>(`${ENDPOINTS.cancelMakeups}${q ? `?${q}` : ''}`);
   return normalizeList<CancelMakeup>(data);
 }
 
@@ -302,19 +328,19 @@ export async function getHomeSummary(): Promise<DashboardSummary> {
 
 export async function getTodayClasses(): Promise<Lesson[]> {
   if (USE_MOCK) return mockStore.lessons.filter(l => l.lesson_date === todayStr());
-  const data = await request<Lesson[] | { results: Lesson[] }>(ENDPOINTS.homeTodayClasses);
+  const data = await request<Lesson[]>(ENDPOINTS.homeTodayClasses);
   return normalizeList<Lesson>(data);
 }
 
 export async function getTodayTasks(): Promise<Todo[]> {
   if (USE_MOCK) return mockStore.todos.filter(t => t.due_date === todayStr());
-  const data = await request<Todo[] | { results: Todo[] }>(ENDPOINTS.homeTodayTasks);
+  const data = await request<Todo[]>(ENDPOINTS.homeTodayTasks);
   return normalizeList<Todo>(data);
 }
 
 export async function getHomeAlerts(): Promise<any[]> {
   if (USE_MOCK) return [];
-  const data = await request<any[] | { results: any[] }>(ENDPOINTS.homeAlerts);
+  const data = await request<any[]>(ENDPOINTS.homeAlerts);
   return normalizeList<any>(data);
 }
 

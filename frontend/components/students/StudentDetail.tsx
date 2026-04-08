@@ -34,8 +34,8 @@ export default function StudentDetail({
           <div className="text-[18px] font-bold" style={{ color: '#222' }}>{student.name}</div>
           <div className="text-[12px]" style={{ color: '#888' }}>
             {student.subject}
-            {student.regular_day ? ` · ${student.regular_day}` : ''}
-            {student.regular_time ? ` ${student.regular_time}` : ''}
+            {(student as any).regular_day ? ` · ${(student as any).regular_day}` : ''}
+            {(student as any).regular_time ? ` ${(student as any).regular_time}` : ''}
           </div>
         </div>
       </div>

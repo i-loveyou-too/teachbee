@@ -25,7 +25,7 @@ export default function StudentCard({ student, onClick }: StudentCardProps) {
             </div>
             <div className="text-[11px]" style={{ color: '#888' }}>
               {student.subject}
-              {student.regular_day ? ` · ${student.regular_day}` : ''}
+              {(student as any).regular_day ? ` · ${(student as any).regular_day}` : ''}
             </div>
           </div>
         </div>

@@ -18,14 +18,11 @@ export default function StudentForm({ open, onClose, onSave, student }: StudentF
     e.preventDefault();
     setSaving(true);
     const fd = new FormData(e.currentTarget);
-    const data: StudentFormData = {
+    const data: any = {
       name: fd.get('name') as string,
       phone: fd.get('phone') as string,
       subject: fd.get('subject') as string,
-      regular_day: fd.get('regular_day') as string,
-      regular_time: fd.get('regular_time') as string,
       default_location: fd.get('default_location') as string,
-      lesson_method: (fd.get('lesson_method') as '대면' | '온라인') ?? '대면',
       fee: Number(fd.get('fee')) || 0,
       payment_status: (fd.get('payment_status') as StudentFormData['payment_status']) ?? '대기',
       memo: fd.get('memo') as string,
@@ -77,7 +74,7 @@ export default function StudentForm({ open, onClose, onSave, student }: StudentF
             <label className={labelCls} style={labelStyle}>수업 요일</label>
             <input
               name="regular_day"
-              defaultValue={student?.regular_day ?? ''}
+              defaultValue={(student as any)?.regular_day ?? ''}
               placeholder="월, 수"
               className={inputCls}
               style={inputStyle}
@@ -88,7 +85,7 @@ export default function StudentForm({ open, onClose, onSave, student }: StudentF
             <input
               name="regular_time"
               type="time"
-              defaultValue={student?.regular_time ?? ''}
+              defaultValue={(student as any)?.regular_time ?? ''}
               className={inputCls}
               style={inputStyle}
             />
@@ -106,7 +103,7 @@ export default function StudentForm({ open, onClose, onSave, student }: StudentF
         <label className={labelCls} style={labelStyle}>수업 방식</label>
         <select
           name="lesson_method"
-          defaultValue={student?.lesson_method ?? '대면'}
+          defaultValue={(student as any)?.lesson_method ?? '대면'}
           className={inputCls}
           style={inputStyle}
         >
